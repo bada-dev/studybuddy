@@ -1,0 +1,5837 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Study Buddy</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+<!--
+    Project: Study Buddy
+    Author: ETHANTYAGI
+    Version: 3.0
+	ALL RIGHTS RESERVED
+-->
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(120deg, #e6d4bf, #c4a07a, #a5845a, #d4b68f);
+  background-size: 400% 400%;
+  animation: brownFlow 15s linear infinite;
+  color: #2D3142;
+  touch-action: pan-y;
+  position: fixed;
+}
+
+@keyframes brownFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.pages-container {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.page.active {
+  transform: translateX(0);
+}
+
+.page.prev {
+  transform: translateX(-100%);
+}
+
+/* Top Bar */
+.top-bar {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.menu-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.menu-btn:active {
+  transform: scale(0.9);
+}
+
+.hamburger {
+  width: 24px;
+  height: 18px;
+  position: relative;
+}
+
+.hamburger span {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: #2D3142;
+  border-radius: 2px;
+  position: absolute;
+  transition: all 0.3s;
+}
+
+.hamburger span:nth-child(1) { top: 0; }
+.hamburger span:nth-child(2) { top: 7.5px; }
+.hamburger span:nth-child(3) { top: 15px; }
+
+.admin-key {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  opacity: 0.25;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.admin-key:active {
+  opacity: 0.5;
+}
+
+.currency-display {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.currency-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.3);
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 85px;
+  justify-content: flex-end;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.currency-icon {
+  font-size: 20px;
+}
+
+.carrot-icon {
+  cursor: grab;
+  transition: transform 0.2s;
+}
+
+.carrot-icon:active {
+  cursor: grabbing;
+  transform: scale(1.2);
+}
+
+.carrot-icon.dragging {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  font-size: 32px;
+}
+
+/* Home Page */
+.home-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+}
+
+.character-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  max-height: 35vh;
+  flex-direction: column;
+}
+
+.character {
+  position: relative;
+  width: 140px;
+  height: 160px;
+  animation: breathe 3s ease-in-out infinite alternate;
+  margin-top: 30px;
+  transition: width 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), filter 0.5s;
+}
+
+.character.reviving {
+  animation: revive-spin 5s linear;
+}
+
+@keyframes revive-spin {
+  0% { transform: scale(0.5) rotate(0deg); filter: blur(10px); }
+  50% { transform: scale(0.8) rotate(180deg); filter: blur(5px); }
+  100% { transform: scale(1) rotate(360deg); filter: blur(0px); }
+}
+
+@keyframes breathe {
+  0% { transform: scale(0.98) translateY(0); }
+  100% { transform: scale(1.02) translateY(-3px); }
+}
+
+.character.happy {
+  animation: celebration 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes celebration {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-30px) scale(1.12) rotate(-4deg); }
+  50% { transform: translateY(-18px) scale(1.08) rotate(4deg); }
+  75% { transform: translateY(-25px) scale(1.1) rotate(-2deg); }
+}
+
+.character.eating .character-mouth {
+  animation: chew 0.3s ease-in-out 3;
+}
+
+@keyframes chew {
+  0%, 100% { transform: translateX(-50%) scaleY(1); }
+  50% { transform: translateX(-50%) scaleY(0.3); }
+}
+
+.character.melted .character-body {
+  border-radius: 20% 80% 30% 70% / 60% 40% 60% 40%;
+  height: 60%;
+  transform: translateY(40%);
+}
+
+.character-shadow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 16px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.25) 0%, transparent 70%);
+  filter: blur(6px);
+  transition: width 0.5s;
+}
+
+.character-body {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #B8865C 0%, #A87652 50%, #986652 100%);
+  position: relative;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.2);
+  transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 48% 52% 48% 52% / 52% 55% 45% 48%;
+  border: 2px solid rgba(0,0,0,0.2);
+}
+
+.character-eyes {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 28px;
+}
+
+.eye {
+  width: 20px;
+  height: 20px;
+  background: #2D3142;
+  border-radius: 50%;
+  position: relative;
+  animation: blink 5s infinite;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+@keyframes blink {
+  0%, 48%, 52%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
+}
+
+.eye::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 7px;
+  height: 7px;
+  background: white;
+  border-radius: 50%;
+}
+
+.character-mouth {
+  position: absolute;
+  bottom: 55px;
+  left: 28px;
+  width: 34px;
+  height: 18px;
+  border: 3px solid #2D3142;
+  border-top: none;
+  border-radius: 0 0 35px 35px;
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.character.focused .character-mouth {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border: none;
+  background: #2D3142;
+  border-radius: 2px;
+  bottom: 52px;
+}
+
+.character.sad .character-mouth {
+  border-bottom: none;
+  border-top: 3px solid #2D3142;
+  border-radius: 35px 35px 0 0;
+  bottom: 48px;
+  left: 26px;
+  width: 30px;
+}
+
+.character.very-sad .character-mouth {
+  border-bottom: none;
+  border-top: 4px solid #2D3142;
+  border-radius: 40px 40px 0 0;
+  bottom: 45px;
+  left: 24px;
+  width: 32px;
+  height: 22px;
+}
+
+.character.melted .character-eyes,
+.character.melted .character-mouth {
+  display: none;
+}
+
+/* Cosmetic overlays */
+.top-hat {
+  position: absolute;
+  top: -42px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.top-hat-top {
+  width: 45px;
+  height: 32px;
+  background: #1a1a1a;
+  border-radius: 6px 6px 0 0;
+  margin: 0 auto;
+  border: 2px solid #000;
+}
+
+.top-hat-brim {
+  width: 65px;
+  height: 10px;
+  background: #1a1a1a;
+  border-radius: 30px;
+  margin: 2px auto 0;
+  border: 2px solid #000;
+}
+
+
+.wizard-hat {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 38px solid transparent;
+  border-right: 38px solid transparent;
+  border-bottom: 55px solid #4B0082;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  z-index: 10;
+}
+
+.wizard-hat::after {
+  content: '⭐';
+  position: absolute;
+  top: 8px;
+  left: -7px;
+  font-size: 14px;
+}
+
+.pirate-hat {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-8deg);
+  width: 65px;
+  height: 32px;
+  background: #1a1a1a;
+  border-radius: 50% 50% 0 0;
+  border: 2px solid #000;
+  z-index: 10;
+}
+
+.pirate-hat::after {
+  content: '☠️';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+}
+
+.character.reborning {
+  animation: rebornWiggle 0.5s ease-in-out infinite;
+}
+
+@keyframes rebornWiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+  25% { transform: translateX(-10px) rotate(-5deg) scale(1.05); }
+  50% { transform: translateX(0) rotate(0deg) scale(0.95); }
+  75% { transform: translateX(10px) rotate(5deg) scale(1.05); }
+}
+
+
+
+.floating-emoji {
+  position: absolute;
+  font-size: 24px;
+  opacity: 0;
+  pointer-events: none;
+  animation: float-up 3s ease-out forwards;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0.6;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.5);
+  }
+}
+
+.happy-meter-container {
+  width: 100%;
+  max-width: 180px;
+  margin-top: 20px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.happy-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #5B4A3A;
+  margin-bottom: 5px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.happy-meter {
+  width: 100%;
+  height: 14px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.4);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.happy-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B9D 0%, #FFA06B 100%);
+  border-radius: 7px;
+  transition: width 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Timer Area */
+.timer-area {
+  text-align: center;
+  padding: 8px 0 4px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  margin: 0 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.timer-display {
+  font-size: 56px;
+  font-weight: 700;
+  color: #2D3142;
+  letter-spacing: -0.02em;
+  text-shadow: 0 3px 12px rgba(0,0,0,0.15);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.timer-display:active {
+  transform: scale(0.98);
+}
+
+.session-label {
+  font-size: 14px;
+  color: #4A3F35;
+  font-weight: 600;
+}
+
+/* Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 0;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.25);
+  border-radius: 24px;
+  padding: 4px;
+  width: 95%;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 9px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #5B4A3A;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.mode-tab.active {
+  background: rgba(255,255,255,0.9);
+  color: #2D3142;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+}
+
+.mode-tab:active {
+  transform: scale(0.96);
+}
+
+/* Buttons */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0 14px;
+}
+
+.action-btn {
+  flex: 1;
+  height: 54px;
+  background: linear-gradient(135deg, #6BCF7F 0%, #5ABF6F 100%);
+  border: none;
+  border-radius: 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(107, 207, 127, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 3px 10px rgba(107, 207, 127, 0.3);
+}
+
+.action-btn.pause {
+  background: linear-gradient(135deg, #FFB84D 0%, #FFA83D 100%);
+  box-shadow: 0 6px 20px rgba(255, 184, 77, 0.4);
+}
+
+.action-btn.stop {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF5B5B 100%);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  flex: 0.5;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  display: flex;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.2);
+  padding: 6px 0 10px;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  font-size: 10px;
+  font-weight: 600;
+  color: #6B5A4A;
+  position: relative;
+}
+
+.nav-item.active {
+  color: #2D3142;
+  transform: translateY(-2px);
+}
+
+.nav-item:active {
+  transform: scale(0.9);
+}
+
+.nav-icon {
+  font-size: 22px;
+  transition: transform 0.3s;
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.12);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 85%;
+  height: 75%;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  z-index: -1;
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.4);
+}
+
+/* Statistics Page */
+.stats-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.stats-header {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #2D3142;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.35);
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.stat-card.discourage {
+  background: rgba(255,107,107,0.2);
+}
+
+.stat-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2D3142;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #5B4A3A;
+  font-weight: 600;
+}
+
+.calendar {
+  background: rgba(255,255,255,0.35);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.calendar-month {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2D3142;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.calendar-nav-btn {
+  width: 30px;
+  height: 30px;
+  background: rgba(255,255,255,0.5);
+  border: none;
+  border-radius: 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-nav-btn:active {
+  transform: scale(0.9);
+}
+
+.gcal-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #4285F4 0%, #3367D6 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(66,133,244,0.3);
+}
+
+.gcal-btn:active {
+  transform: scale(0.97);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #5B4A3A;
+  padding: 3px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.3);
+  color: #2D3142;
+  transition: all 0.2s;
+  position: relative;
+  cursor: pointer;
+}
+
+.calendar-day.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-day.studied {
+  background: linear-gradient(135deg, #6BCF7F 0%, #5ABF6F 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(107,207,127,0.4);
+}
+
+.calendar-day.has-deadline::after {
+  content: attr(data-task-count);
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #FF6B6B;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.5);
+}
+
+.calendar-day.today {
+  border: 2px solid #FFB84D;
+  font-weight: 700;
+}
+
+/* To-Do Page */
+.todo-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.todo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.todo-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2D3142;
+}
+
+.add-todo-btn {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #6BCF7F 0%, #5ABF6F 100%);
+  border: none;
+  border-radius: 22px;
+  font-size: 28px;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(107, 207, 127, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.add-todo-btn:active {
+  transform: scale(0.9);
+}
+
+.todo-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.todo-item {
+  background: rgba(255,255,255,0.35);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s;
+}
+
+.todo-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #6BCF7F;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.todo-item.completed .todo-checkbox {
+  background: linear-gradient(135deg, #6BCF7F 0%, #5ABF6F 100%);
+  position: relative;
+}
+
+.todo-item.completed .todo-checkbox::after {
+  content: '✓';
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.todo-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.todo-text {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.todo-deadline {
+  font-size: 11px;
+  color: #6B7080;
+}
+
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.todo-delete {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF5B5B 100%);
+  border: none;
+  border-radius: 16px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.todo-delete:active {
+  transform: scale(0.9);
+}
+
+.todo-sort-bar {
+  padding: 0 0 12px 0;
+}
+
+.todo-sort-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.35);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2D3142;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.todo-sort-select:focus {
+  outline: none;
+  border-color: #6BCF7F;
+  box-shadow: 0 4px 12px rgba(107,207,127,0.3);
+}
+
+/* Shop Page */
+.shop-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.shop-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.shop-tab {
+  flex: 1;
+  padding: 9px;
+  background: rgba(255,255,255,0.25);
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5B4A3A;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shop-tab.active {
+  background: rgba(255,255,255,0.7);
+  color: #2D3142;
+  font-weight: 700;
+}
+
+.shop-tabs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.shop-tabs-grid .shop-tab {
+  padding: 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1.2;
+  min-height: 60px;
+}
+
+.shop-tab {
+  transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.shop-tab:active {
+  transform: scale(0.95);
+}
+
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.shop-item {
+  background: rgba(255,255,255,0.4);
+  border-radius: 16px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 3px solid transparent;
+  text-align: center;
+}
+
+.shop-item:active {
+  transform: scale(0.95);
+}
+
+.shop-item.owned {
+  border-color: #6BCF7F;
+}
+
+.shop-item.equipped {
+  border-color: #FFB84D;
+  background: rgba(255,184,77,0.25);
+}
+
+.shop-item-icon {
+  font-size: 44px;
+  margin-bottom: 6px;
+}
+
+.shop-item-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #2D3142;
+}
+
+.shop-item-price {
+  font-size: 11px;
+  color: #6B7080;
+  font-weight: 600;
+}
+
+.bg-item {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bg-item:active {
+  transform: scale(0.95);
+}
+
+.bg-item.owned {
+  border-color: #6BCF7F;
+}
+
+.bg-item.active {
+  border-color: #FFB84D;
+  box-shadow: 0 0 0 3px rgba(255,184,77,0.3);
+}
+
+.bg-item-name {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.bg-price {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 8px;
+}
+
+/* Settings Page */
+.settings-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5B4A3A;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.setting-item {
+  background: rgba(255,255,255,0.35);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+}
+
+.setting-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2D3142;
+}
+
+.setting-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #6BCF7F;
+  cursor: pointer;
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.setting-value:active {
+  transform: scale(0.95);
+}
+
+.toggle {
+  width: 50px;
+  height: 28px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.toggle.active {
+  background: #6BCF7F;
+}
+
+.toggle-slider {
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 12px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.toggle.active .toggle-slider {
+  left: 24px;
+}
+
+/* Modals */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal.active {
+  display: flex;
+  animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 22px;
+  padding: 26px;
+  max-width: 330px;
+  width: 88%;
+  text-align: center;
+  transform: scale(0.9);
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalPop {
+  to { transform: scale(1); }
+}
+
+.modal-title {
+  font-size: 21px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #2D3142;
+}
+
+.modal-text {
+  font-size: 14px;
+  color: #6B7080;
+  margin-bottom: 18px;
+}
+
+.modal-input, .modal-textarea {
+  width: 100%;
+  padding: 13px;
+  border: 2px solid #E0E5F0;
+  border-radius: 13px;
+  font-size: 15px;
+  margin-bottom: 11px;
+  transition: border 0.2s;
+  font-family: inherit;
+}
+
+.modal-textarea {
+  min-height: 75px;
+  resize: vertical;
+}
+
+.modal-input:focus, .modal-textarea:focus {
+  outline: none;
+  border-color: #6BCF7F;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 13px;
+  border: none;
+  border-radius: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.modal-btn.primary {
+  background: linear-gradient(135deg, #6BCF7F 0%, #5ABF6F 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(107,207,127,0.3);
+}
+
+.modal-btn.secondary {
+  background: #E0E5F0;
+  color: #6B7080;
+}
+
+.modal-btn:active {
+  transform: scale(0.96);
+}
+
+.time-picker {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.time-input {
+  width: 65px;
+  padding: 11px;
+  border: 2px solid #E0E5F0;
+  border-radius: 11px;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Menu Drawer */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.menu-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 75%;
+  max-width: 280px;
+  background: linear-gradient(180deg, #c4a07a 0%, #a5845a 100%);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  z-index: 1001;
+  padding: 55px 20px 20px;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+}
+
+.menu-drawer.active {
+  transform: translateX(0);
+}
+
+.menu-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 30px;
+  color: #2D3142;
+  transition: transform 0.2s;
+}
+
+.menu-close:active {
+  transform: scale(0.9);
+}
+
+.menu-item {
+  padding: 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2D3142;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.menu-item:active {
+  transform: translateX(4px);
+}
+
+/* Reward Popup */
+.reward-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: white;
+  border-radius: 26px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  z-index: 2000;
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 300px;
+}
+
+.reward-popup.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.reward-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #6BCF7F;
+  margin-bottom: 12px;
+}
+
+.reward-text {
+  font-size: 15px;
+  color: #6B7080;
+  margin-bottom: 9px;
+}
+
+.reward-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2D3142;
+}
+
+/* Sparkles */
+.sparkle {
+  position: fixed;
+  width: 9px;
+  height: 9px;
+  background: #FFD93D;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparkle-fall 1.2s ease-out forwards;
+  z-index: 999;
+  box-shadow: 0 0 8px #FFD93D;
+}
+
+@keyframes sparkle-fall {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110px) scale(0) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+/* Reading Book Animation */
+.reading-book {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 80px;
+  z-index: 15;
+  transform-style: preserve-3d;
+  perspective: 800px;
+  animation: bookFloat 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bookFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0px); }
+  50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+.book-3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(55deg) rotateY(0deg) rotateZ(0deg);
+}
+
+.book-back-cover {
+  position: absolute;
+  width: 124px;
+  height: 84px;
+  left: -2px;
+  top: -2px;
+  background: linear-gradient(135deg, #8B5A3C 0%, #6B4423 50%, #5C3A1F 100%);
+  border: 3px solid #3d2815;
+  border-radius: 4px;
+  transform: translateZ(-22px);
+  box-shadow: 
+    inset 0 0 20px rgba(0,0,0,0.4),
+    0 4px 12px rgba(0,0,0,0.5);
+}
+
+.book-pages-bulk {
+  position: absolute;
+  width: 116px;
+  height: 76px;
+  left: 2px;
+  top: 2px;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      #fff 0px,
+      #f8f8f0 1px,
+      #f5f5ed 2px,
+      #f8f8f0 3px,
+      #fff 4px
+    );
+  transform: translateZ(-14px);
+  border: 2px solid #d4c4b0;
+  border-radius: 1px;
+  box-shadow: 
+    inset 3px 0 5px rgba(0,0,0,0.15),
+    inset -3px 0 5px rgba(0,0,0,0.15);
+}
+
+.book-left-page {
+  position: absolute;
+  width: 60px;
+  height: 80px;
+  left: 0;
+  top: 0;
+  background: linear-gradient(to right, #f0ebe0 0%, #fff 100%);
+  border: 2px solid #c4c4b0;
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+  transform: translateZ(-4px);
+  box-shadow: inset -12px 0 18px rgba(0,0,0,0.1);
+}
+
+.book-left-page::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  right: 6px;
+  height: calc(100% - 24px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    rgba(0,0,0,0.06) 8px,
+    rgba(0,0,0,0.06) 9px
+  );
+}
+
+.book-right-page {
+  position: absolute;
+  width: 60px;
+  height: 80px;
+  right: 0;
+  top: 0;
+  background: linear-gradient(to left, #f0ebe0 0%, #fff 100%);
+  border: 2px solid #c4c4b0;
+  border-left: none;
+  border-radius: 0 3px 3px 0;
+  transform: translateZ(-4px);
+  box-shadow: inset 12px 0 18px rgba(0,0,0,0.1);
+}
+
+.book-right-page::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 6px;
+  right: 10px;
+  height: calc(100% - 24px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    rgba(0,0,0,0.06) 8px,
+    rgba(0,0,0,0.06) 9px
+  );
+}
+
+.book-spine-edge {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 22px;
+  height: 80px;
+  background: linear-gradient(90deg, #5C3A1F 0%, #3d2815 50%, #5C3A1F 100%);
+  transform: translateX(-50%) translateZ(-14px) rotateY(90deg);
+  transform-origin: center;
+  box-shadow: 
+    inset 0 8px 20px rgba(0,0,0,0.4),
+    inset 0 -8px 20px rgba(0,0,0,0.4);
+}
+
+.page-flip {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 60px;
+  height: 80px;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  transform: translateZ(-3px);
+}
+
+.page-flip-front {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to left, #f0ebe0 0%, #fff 100%);
+  border: 2px solid #c4c4b0;
+  border-radius: 0 3px 3px 0;
+  backface-visibility: hidden;
+}
+
+.page-flip-front::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 6px;
+  right: 10px;
+  height: calc(100% - 24px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    rgba(0,0,0,0.06) 8px,
+    rgba(0,0,0,0.06) 9px
+  );
+}
+
+.page-flip-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, #fff 0%, #f0ebe0 100%);
+  border: 2px solid #c4c4b0;
+  border-radius: 3px 0 0 3px;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+.page-flip-back::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  right: 6px;
+  height: calc(100% - 24px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    rgba(0,0,0,0.06) 8px,
+    rgba(0,0,0,0.06) 9px
+  );
+}
+
+.page-flip:nth-child(7) {
+  animation: flipPage 18s ease-in-out infinite;
+  z-index: 3;
+}
+
+.page-flip:nth-child(8) {
+  animation: flipPage 25s ease-in-out infinite;
+  animation-delay: 10s;
+  z-index: 2;
+}
+
+@keyframes flipPage {
+  0%, 10% {
+    transform: translateZ(-3px) rotateY(0deg);
+  }
+  28%, 100% {
+    transform: translateZ(-3px) rotateY(-180deg);
+  }
+}
+
+.book-shadow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 18px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.3) 0%, transparent 70%);
+  filter: blur(6px);
+  z-index: 1;
+}
+
+/* Reborn Wiggle Animation */
+.character.reborning {
+  animation: rebornWiggle 0.5s ease-in-out infinite;
+}
+
+@keyframes rebornWiggle {
+  0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+  25% { transform: translateX(-10px) rotate(-5deg) scale(1.05); }
+  50% { transform: translateX(0) rotate(0deg) scale(0.95); }
+  75% { transform: translateX(10px) rotate(5deg) scale(1.05); }
+}
+
+.reborn-timer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.95);
+  border-radius: 24px;
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  z-index: 2500;
+  min-width: 280px;
+}
+
+.reborn-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #FF6B6B;
+  margin-bottom: 12px;
+}
+
+.reborn-text {
+  font-size: 15px;
+  color: #6B7080;
+  margin-bottom: 16px;
+}
+
+.reborn-countdown {
+  font-size: 48px;
+  font-weight: 700;
+  color: #6BCF7F;
+  margin-bottom: 8px;
+}
+
+.reborn-label {
+  font-size: 13px;
+  color: #6B7080;
+  font-weight: 600;
+}
+
+html, body {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+* {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  cursor: pointer;
+  border: none;
+}
+
+/* Emote Animations */
+.character.emote-wave {
+  animation: emoteWave 1s ease-in-out;
+}
+
+@keyframes emoteWave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+}
+
+.character.emote-love .character-body {
+  filter: hue-rotate(320deg) saturate(1.8) brightness(1.1);
+  transition: filter 0.3s;
+}
+
+@keyframes emoteLove {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.08); }
+  40% { transform: scale(1.15); }
+  60% { transform: scale(1.12); }
+  80% { transform: scale(1.05); }
+}
+
+.character.emote-starstruck {
+  animation: emoteStars 1s ease-in-out;
+}
+
+@keyframes emoteStars {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  50% { transform: scale(1.15) rotate(5deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
+}
+
+.character.emote-crazy {
+  animation: emoteCrazy 2s ease-in-out;
+}
+
+@keyframes emoteCrazy {
+  0% { transform: translateX(0) rotate(0deg); }
+  10% { transform: translateX(-20px) rotate(-20deg); }
+  20% { transform: translateX(20px) rotate(20deg); }
+  30% { transform: translateX(-15px) rotate(-15deg); }
+  40% { transform: translateX(15px) rotate(15deg); }
+  50% { transform: translateX(-10px) rotate(-10deg) scale(1.2); }
+  60% { transform: translateX(10px) rotate(10deg) scale(1.2); }
+  70% { transform: translateX(-5px) rotate(-5deg); }
+  80% { transform: translateX(5px) rotate(5deg); }
+  90% { transform: translateX(-2px) rotate(-2deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+.emote-float {
+  position: absolute;
+  font-size: 32px;
+  pointer-events: none;
+  animation: floatEmote 2s ease-out forwards;
+  z-index: 20;
+}
+
+@keyframes floatEmote {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(1.5);
+  }
+}
+
+/* Memory Match Game */
+.game-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-overlay.active {
+  display: flex;
+}
+
+.game-container {
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.game-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  background: rgba(0,0,0,0.1);
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 101;
+}
+
+.game-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2D3142;
+  margin-bottom: 10px;
+}
+
+.game-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6B7080;
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #6BCF7F 0%, #5ABF6F 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.memory-card.flipped {
+  background: white;
+  border: 3px solid #6BCF7F;
+}
+
+.memory-card.matched {
+  background: #FFB84D;
+  border: 3px solid #FFA83D;
+  cursor: default;
+  opacity: 0.7;
+}
+
+.memory-card:not(.flipped):not(.matched) {
+  color: transparent;
+}
+
+.memory-card:active:not(.matched) {
+  transform: scale(0.95);
+}
+
+.game-complete {
+  text-align: center;
+  padding: 20px;
+  display: none;
+}
+
+.game-complete.show {
+  display: block;
+}
+
+.game-complete-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #6BCF7F;
+  margin-bottom: 10px;
+}
+
+.game-complete-text {
+  font-size: 16px;
+  color: #6B7080;
+  margin-bottom: 20px;
+}
+
+/* Color Selector - Minimal Soft UI */
+#colorModal {
+  background: rgba(230, 230, 230, 0.95);
+}
+
+#colorModal .modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 420px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+#colorModal .modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #2D3142;
+}
+
+#colorModal .modal-text {
+  font-size: 14px;
+  color: #8B8B8B;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.color-option {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.color-option:hover {
+  transform: scale(1.05);
+}
+
+.color-option.selected {
+  border: 2px solid #000000;
+  transform: scale(1.05);
+}
+
+.color-name-label {
+  display: none;
+}
+
+#subjectNameInput {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid #E8E8E8;
+  border-radius: 12px;
+  font-size: 15px;
+  margin-bottom: 0;
+  transition: border 0.2s;
+  font-family: inherit;
+  background: #F9F9F9;
+  color: #2D3142;
+  font-weight: 500;
+}
+
+#subjectNameInput:focus {
+  outline: none;
+  border-color: #70A1FF;
+  background: white;
+}
+
+#subjectNameInput::placeholder {
+  color: #B0B0B0;
+}
+
+/* Universal smooth transitions */
+button,
+.action-btn,
+.add-todo-btn,
+.modal-btn,
+.gcal-btn,
+.shop-tab,
+.mode-tab,
+.nav-item,
+.calendar-nav-btn,
+.setting-value,
+.todo-delete,
+.game-close,
+.shop-item,
+.bg-item,
+.todo-checkbox,
+.color-option {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease,
+              opacity 0.2s ease,
+              background 0.2s ease;
+}
+
+button:active:not(:disabled),
+.action-btn:active,
+.add-todo-btn:active,
+.modal-btn:active:not(:disabled),
+.gcal-btn:active,
+.shop-tab:active,
+.mode-tab:active,
+.nav-item:active,
+.calendar-nav-btn:active,
+.setting-value:active,
+.todo-delete:active,
+.game-close:active,
+.shop-item:active,
+.bg-item:active,
+.todo-checkbox:active,
+.color-option:active {
+  transform: scale(0.94);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Reborn evolution glow */
+.character.reborn-evolving .character-body {
+  transition: box-shadow 1s ease, filter 0.5s;
+}
+
+@keyframes breatheFast {
+  0% { transform: scale(0.97) translateY(0); }
+  100% { transform: scale(1.05) translateY(-6px); }
+}
+
+@keyframes breatheMax {
+  0% { transform: scale(0.95) translateY(0) rotate(-1deg); }
+  100% { transform: scale(1.08) translateY(-10px) rotate(1deg); }
+}
+
+</style>
+</head>
+<body>
+<div class="bg-overlay" id="bgOverlay"></div>
+
+<div class="container">
+  <div class="pages-container">
+    <!-- Home Page -->
+    <div class="page active" id="homePage">
+      <div class="top-bar">
+        <div class="menu-btn" id="menuBtn">
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="admin-key" id="adminKey">🔑</div>
+        <div class="currency-display">
+          <div class="currency-item">
+            <span id="coinsDisplay">0</span>
+            <span class="currency-icon">🪙</span>
+          </div>
+          <div class="currency-item">
+            <span id="carrotsDisplay">0</span>
+            <span class="currency-icon carrot-icon" id="carrotIcon">🥕</span>
+          </div>
+        </div>
+      </div>
+
+        <div class="home-content">
+        <div class="character-area">
+          <div class="character" id="character">
+            <div class="character-shadow"></div>
+            <div class="character-body">
+              <div class="character-eyes">
+                <div class="eye"></div>
+                <div class="eye"></div>
+              </div>
+              <div class="character-mouth"></div>
+            </div>
+            <div id="cosmeticContainer"></div>
+          </div>
+          <div class="happy-meter-container">
+            <div class="happy-label">Happiness: <span id="happyPercent">100</span>%</div>
+            <div class="happy-meter">
+              <div class="happy-fill" id="happyFill" style="width: 100%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="timer-area">
+          <div class="timer-display" id="timerDisplay">25:00</div>
+          <div class="session-label" id="sessionLabel">Ready to focus</div>
+        </div>
+
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="focus">Focus</button>
+          <button class="mode-tab" data-mode="stopwatch">Stopwatch</button>
+          <button class="mode-tab" data-mode="long">Long Break</button>
+        </div>
+
+        <div class="action-buttons">
+          <button class="action-btn" id="actionBtn">Start Focus</button>
+          <button class="action-btn stop" id="stopBtn" style="display:none;">Stop</button>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active" data-page="home">
+          <div class="nav-icon">🏠</div>
+          <div>Home</div>
+        </div>
+        <div class="nav-item" data-page="stats">
+          <div class="nav-icon">📊</div>
+          <div>Stats</div>
+        </div>
+        <div class="nav-item" data-page="todo">
+          <div class="nav-icon">✓</div>
+          <div>To-Do</div>
+        </div>
+        <div class="nav-item" data-page="shop">
+          <div class="nav-icon">🛒</div>
+          <div>Shop</div>
+        </div>
+        <div class="nav-item" data-page="settings">
+          <div class="nav-icon">⚙️</div>
+          <div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Page -->
+    <div class="page" id="statsPage">
+      <div class="top-bar">
+        <div class="menu-btn">
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="admin-key">🔑</div>
+        <div class="currency-display">
+          <div class="currency-item">
+            <span id="coinsDisplay2">0</span>
+            <span class="currency-icon">🪙</span>
+          </div>
+          <div class="currency-item">
+            <span id="carrotsDisplay2">0</span>
+            <span class="currency-icon">🥕</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-content">
+      <div class="stats-header">Statistics</div>
+      <button class="gcal-btn" id="achievementsBtn" style="margin: 0 0 10px 0;">🏆 Achievements</button>
+      <button class="gcal-btn" id="streakDisplay" style="margin: 0 0 20px 0; cursor: pointer;">🔥 Streak: <span id="streakCount">0</span> days <span id="freezeIndicator"></span></button>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-value" id="longestSession">0m</div>
+            <div class="stat-label">Longest Session</div>
+          </div>
+          <div class="stat-card discourage">
+            <div class="stat-icon">☕</div>
+            <div class="stat-value" id="longestBreak">0m</div>
+            <div class="stat-label">Longest Break</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value" id="highestCoins">0</div>
+            <div class="stat-label">Highest Coins</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🥕</div>
+            <div class="stat-value" id="carrotsFed">0</div>
+            <div class="stat-label">Carrots Fed</div>
+          </div>
+        </div>
+
+        <div class="calendar">
+          <div class="calendar-header">
+            <button class="calendar-nav-btn" id="prevMonth">‹</button>
+            <div class="calendar-month" id="calendarMonth"></div>
+            <button class="calendar-nav-btn" id="nextMonth">›</button>
+          </div>
+        <div class="calendar" style="margin-top: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div class="calendar-month">Study Time</div>
+            <div style="display: flex; gap: 6px;">
+              <button id="refreshGraph" style="padding: 6px 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.3); font-weight: 600; cursor: pointer; font-size: 14px;">🔄</button>
+              <select id="graphRange" style="padding: 6px 10px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.3); font-weight: 600;">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+              </select>
+            </div>
+          </div>
+          <canvas id="studyChart" style="max-height: 200px;"></canvas>
+          <div style="margin-top: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #5B4A3A;">
+            Total: <span id="totalStudyTime">0</span> minutes
+          </div>
+        </div> 
+          <div class="calendar-weekdays">
+            <div class="calendar-weekday">S</div>
+            <div class="calendar-weekday">M</div>
+            <div class="calendar-weekday">T</div>
+            <div class="calendar-weekday">W</div>
+            <div class="calendar-weekday">T</div>
+            <div class="calendar-weekday">F</div>
+            <div class="calendar-weekday">S</div>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <button class="gcal-btn" id="gcalBtn">📅 Open Google Calendar</button>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" data-page="home">
+          <div class="nav-icon">🏠</div>
+          <div>Home</div>
+        </div>
+        <div class="nav-item active" data-page="stats">
+          <div class="nav-icon">📊</div>
+          <div>Stats</div>
+        </div>
+        <div class="nav-item" data-page="todo">
+          <div class="nav-icon">✓</div>
+          <div>To-Do</div>
+        </div>
+        <div class="nav-item" data-page="shop">
+          <div class="nav-icon">🛒</div>
+          <div>Shop</div>
+        </div>
+        <div class="nav-item" data-page="settings">
+          <div class="nav-icon">⚙️</div>
+          <div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- To-Do Page -->
+    <div class="page" id="todoPage">
+      <div class="top-bar">
+        <div class="menu-btn">
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="admin-key">🔑</div>
+        <div class="currency-display">
+          <div class="currency-item">
+            <span id="coinsDisplay3">0</span>
+            <span class="currency-icon">🪙</span>
+          </div>
+          <div class="currency-item">
+            <span id="carrotsDisplay3">0</span>
+            <span class="currency-icon">🥕</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="todo-content">
+        <div class="todo-header">
+          <div class="todo-title">To-Do List</div>
+          <button class="add-todo-btn" id="addTodoBtn">+</button>
+        </div>
+        <div class="todo-sort-bar">
+          <select id="todoSort" class="todo-sort-select">
+            <option value="deadline">📅 Due Date First</option>
+            <option value="alphabetical">🔤 Alphabetical</option>
+            <option value="created">🕒 Recently Added</option>
+          </select>
+        </div>
+        <div class="todo-list" id="todoList"></div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" data-page="home">
+          <div class="nav-icon">🏠</div>
+          <div>Home</div>
+        </div>
+        <div class="nav-item" data-page="stats">
+          <div class="nav-icon">📊</div>
+          <div>Stats</div>
+        </div>
+        <div class="nav-item active" data-page="todo">
+          <div class="nav-icon">✓</div>
+          <div>To-Do</div>
+        </div>
+        <div class="nav-item" data-page="shop">
+          <div class="nav-icon">🛒</div>
+          <div>Shop</div>
+        </div>
+        <div class="nav-item" data-page="settings">
+          <div class="nav-icon">⚙️</div>
+          <div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shop Page -->
+    <div class="page" id="shopPage">
+      <div class="top-bar">
+        <div class="menu-btn">
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="admin-key">🔑</div>
+        <div class="currency-display">
+          <div class="currency-item">
+            <span id="coinsDisplay4">0</span>
+            <span class="currency-icon">🪙</span>
+          </div>
+          <div class="currency-item">
+            <span id="carrotsDisplay4">0</span>
+            <span class="currency-icon">🥕</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="shop-content">
+        <div class="stats-header">Shop</div>
+        
+        <div class="shop-tabs-grid">
+          <button class="shop-tab active" data-category="items">Items</button>
+          <button class="shop-tab" data-category="cosmetics">Cosmetics</button>
+          <button class="shop-tab" data-category="emotes">Emotes</button>
+          <button class="shop-tab" data-category="backgrounds">Backgrounds</button>
+        </div>
+
+        <div class="shop-items" id="shopItems"></div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" data-page="home">
+          <div class="nav-icon">🏠</div>
+          <div>Home</div>
+        </div>
+        <div class="nav-item" data-page="stats">
+          <div class="nav-icon">📊</div>
+          <div>Stats</div>
+        </div>
+        <div class="nav-item" data-page="todo">
+          <div class="nav-icon">✓</div>
+          <div>To-Do</div>
+        </div>
+        <div class="nav-item active" data-page="shop">
+          <div class="nav-icon">🛒</div>
+          <div>Shop</div>
+        </div>
+        <div class="nav-item" data-page="settings">
+          <div class="nav-icon">⚙️</div>
+          <div>Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page" id="settingsPage">
+      <div class="top-bar">
+        <div class="menu-btn">
+          <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="admin-key">🔑</div>
+        <div class="currency-display">
+          <div class="currency-item">
+            <span id="coinsDisplay5">0</span>
+            <span class="currency-icon">🪙</span>
+          </div>
+          <div class="currency-item">
+            <span id="carrotsDisplay5">0</span>
+            <span class="currency-icon">🥕</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-content">
+        <div class="stats-header">Settings</div>
+        
+        <div class="settings-section">
+          <div class="section-title">Features</div>
+          <div class="setting-item">
+            <div class="setting-label">Sound Effects</div>
+            <div class="toggle" id="soundToggle">
+              <div class="toggle-slider"></div>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">Floating Emojis</div>
+            <div class="toggle active" id="emojiToggle">
+              <div class="toggle-slider"></div>
+            </div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">Auto-Start Breaks</div>
+            <div class="toggle" id="autoBreakToggle">
+              <div class="toggle-slider"></div>
+            </div>
+          </div>
+          <div class="setting-item" id="opacitySetting">
+            <div class="setting-label">Background Darkness</div>
+            <div class="setting-value" id="opacityValue">10%</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="section-title">Timer Settings</div>
+          <div class="setting-item" id="focusDurationSetting">
+            <div class="setting-label">Focus Duration</div>
+            <div class="setting-value" id="focusDurationValue">25 min</div>
+          </div>
+
+          <div class="setting-item" id="longBreakSetting">
+            <div class="setting-label">Long Break</div>
+            <div class="setting-value" id="longBreakValue">15 min</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="section-title">Happiness Decay</div>
+          <div class="setting-item">
+            <div class="setting-label">Decay Rate</div>
+            <div class="setting-value">10%/hour</div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">Stop Penalty</div>
+            <div class="setting-value">5-15%</div>
+          </div>
+        </div>
+
+		<div class="settings-section">
+          <div class="section-title">Feedback</div>
+          <div style="background: rgba(255,255,255,0.35); border-radius: 14px; padding: 16px; box-shadow: 0 3px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; cursor: pointer;" id="openFeedbackBtn">
+            <div>
+              <div style="font-size: 15px; font-weight: 700; color: #2D3142;">Suggestions & Bugs</div>
+              <div style="font-size: 11px; color: #8B7A6A; margin-top: 2px; font-weight: 500;">Share feedback with EthanGenius</div>
+            </div>
+            <div style="font-size: 22px; opacity: 0.5;">›</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="section-title">Account</div>
+          <div class="setting-item" style="cursor: pointer;" id="resetBtn">
+            <div class="setting-label" style="color: #FF6B6B;">Reset All Data</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" data-page="home">
+          <div class="nav-icon">🏠</div>
+          <div>Home</div>
+        </div>
+        <div class="nav-item" data-page="stats">
+          <div class="nav-icon">📊</div>
+          <div>Stats</div>
+        </div>
+        <div class="nav-item" data-page="todo">
+          <div class="nav-icon">✓</div>
+          <div>To-Do</div>
+        </div>
+        <div class="nav-item" data-page="shop">
+          <div class="nav-icon">🛒</div>
+          <div>Shop</div>
+        </div>
+        <div class="nav-item active" data-page="settings">
+          <div class="nav-icon">⚙️</div>
+          <div>Settings</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align: center; font-size: 9px; opacity: 0.10; padding: 1px 0 2px; color: #2D3142; letter-spacing: 0.3px; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 100%;">© 2025 EthanGenius. All rights reserved.</div>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="todoModal">
+  <div class="modal-content">
+    <div class="modal-title">Add Task</div>
+    <input type="text" class="modal-input" id="todoInput" placeholder="Task name..." maxlength="50">
+    <textarea class="modal-textarea" id="todoDescription" placeholder="Description (optional)..."></textarea>
+    <input type="date" class="modal-input" id="todoDeadline">
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="cancelTodoBtn">Cancel</button>
+      <button class="modal-btn primary" id="saveTodoBtn">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="todoViewModal">
+  <div class="modal-content">
+    <div class="modal-title" id="viewTodoTitle">Task Details</div>
+    <div class="modal-text" id="viewTodoDescription" style="text-align: left; white-space: pre-wrap;"></div>
+    <div class="modal-text" id="viewTodoDeadline" style="font-weight: 600;"></div>
+    <button class="modal-btn primary" id="closeTodoViewBtn" style="width: 100%;">Close</button>
+  </div>
+</div>
+<div class="modal" id="blurModal">
+  <div class="modal-content">
+    <div class="modal-title">Background Blur</div>
+    <div style="margin-bottom: 18px;">
+      <input type="range" id="blurSlider" min="0" max="20" value="10" style="width: 100%; height: 8px; border-radius: 10px; outline: none; background: linear-gradient(90deg, #6BCF7F 0%, #5ABF6F 100%);">
+      <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: #6B7080;">
+        <span>0 (None)</span>
+        <span id="blurPreview">10</span>
+        <span>20 (Max)</span>
+      </div>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="cancelBlurBtn">Cancel</button>
+      <button class="modal-btn primary" id="saveBlurBtn">Save</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="opacityModal">
+  <div class="modal-content">
+    <div class="modal-title">Background Darkness</div>
+    <div style="margin-bottom: 18px;">
+      <input type="range" id="opacitySlider" min="0" max="50" value="10" style="width: 100%; height: 8px; border-radius: 10px; outline: none; background: linear-gradient(90deg, #6BCF7F 0%, #5ABF6F 100%);">
+      <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: #6B7080;">
+        <span>0 (Clear)</span>
+        <span id="opacityPreview">10</span>
+        <span>50 (Dark)</span>
+      </div>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="cancelOpacityBtn">Cancel</button>
+      <button class="modal-btn primary" id="saveOpacityBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="timeModal">
+  <div class="modal-content">
+    <div class="modal-title" id="timeModalTitle">Set Duration</div>
+    <div class="time-picker">
+      <input type="number" class="time-input" id="minutesInput" min="1" max="500" value="25">
+      <span style="font-size: 19px; font-weight: 700;">min</span>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="cancelTimeBtn">Cancel</button>
+      <button class="modal-btn primary" id="saveTimeBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modal-content">
+    <div class="modal-title">🔑 Admin Access</div>
+    <input type="password" class="modal-input" id="adminPassword" placeholder="Enter code..." maxlength="6">
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="cancelAdminBtn">Cancel</button>
+      <button class="modal-btn primary" id="confirmAdminBtn">Enter</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editCurrencyModal">
+  <div class="modal-content" style="max-width:390px; max-height:88vh; overflow-y:auto;">
+    <div class="modal-title" style="font-size:18px; margin-bottom:12px;">⚙️ Admin Panel</div>
+
+    <!-- Tab Buttons -->
+    <div style="display:flex; gap:5px; margin-bottom:14px;">
+      <button class="admin-tab-btn" data-tab="resources" style="flex:1;padding:8px 4px;border:none;border-radius:9px;background:linear-gradient(135deg,#6BCF7F,#5ABF6F);color:white;font-weight:700;cursor:pointer;font-size:11px;">💰 Resources</button>
+      <button class="admin-tab-btn" data-tab="progress" style="flex:1;padding:8px 4px;border:none;border-radius:9px;background:rgba(0,0,0,0.08);font-weight:700;cursor:pointer;font-size:11px;">📈 Progress</button>
+      <button class="admin-tab-btn" data-tab="unlocks" style="flex:1;padding:8px 4px;border:none;border-radius:9px;background:rgba(0,0,0,0.08);font-weight:700;cursor:pointer;font-size:11px;">🔓 Unlocks</button>
+      <button class="admin-tab-btn" data-tab="danger" style="flex:1;padding:8px 4px;border:none;border-radius:9px;background:rgba(255,107,107,0.2);color:#c0392b;font-weight:700;cursor:pointer;font-size:11px;">⚠️ Danger</button>
+    </div>
+
+    <!-- RESOURCES TAB -->
+    <div class="admin-tab-panel" id="adminTab-resources">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">🪙 Coins</div>
+          <input type="number" class="modal-input" id="coinsInput" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">🥕 Carrots</div>
+          <input type="number" class="modal-input" id="carrotsInput" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">😊 Happiness %</div>
+          <input type="number" class="modal-input" id="happinessInput" min="0" max="100" value="100" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">📐 Char Width px</div>
+          <input type="number" class="modal-input" id="charWidthInput" min="140" max="420" value="140" style="margin:0;padding:10px;">
+        </div>
+      </div>
+      <button class="modal-btn primary" id="saveResourcesBtn" style="width:100%;margin-bottom:8px;">💾 Save Resources</button>
+      <div style="display:flex;gap:6px;">
+        <button class="modal-btn secondary" id="maxHappinessBtn" style="flex:1;font-size:11px;padding:9px;">❤️ Max Happy</button>
+        <button class="modal-btn secondary" id="addCoins100Btn" style="flex:1;font-size:11px;padding:9px;">+100 🪙</button>
+        <button class="modal-btn secondary" id="addCarrots5Btn" style="flex:1;font-size:11px;padding:9px;">+5 🥕</button>
+      </div>
+    </div>
+
+    <!-- PROGRESS TAB -->
+    <div class="admin-tab-panel" id="adminTab-progress" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">🔥 Streak Days</div>
+          <input type="number" class="modal-input" id="streakAdminInput" min="0" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">🏋️ Reborns</div>
+          <input type="number" class="modal-input" id="rebornsInput" min="0" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">💀 Revivals</div>
+          <input type="number" class="modal-input" id="revivalsInput" min="0" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">🥕 Total Fed</div>
+          <input type="number" class="modal-input" id="carrotsFedAdminInput" min="0" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">⏱️ Longest Sess (min)</div>
+          <input type="number" class="modal-input" id="longestSessAdminInput" min="0" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">📚 Today Study (min)</div>
+          <input type="number" class="modal-input" id="todayStudyAdminInput" min="0" value="0" style="margin:0;padding:10px;">
+        </div>
+      </div>
+      <button class="modal-btn primary" id="saveProgressBtn" style="width:100%;margin-bottom:8px;">💾 Save Progress</button>
+      <div style="display:flex;gap:6px;">
+        <button class="modal-btn secondary" id="fixStreakDateBtn" style="flex:1;font-size:11px;padding:9px;">📅 Fix Streak Date</button>
+        <button class="modal-btn secondary" id="toggleFreezeAdminBtn" style="flex:1;font-size:11px;padding:9px;">❄️ Toggle Freeze</button>
+      </div>
+    </div>
+
+    <!-- UNLOCKS TAB -->
+    <div class="admin-tab-panel" id="adminTab-unlocks" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <button class="modal-btn primary" id="unlockAllAchievementsBtn" style="width:100%;">🏆 Unlock All Achievements</button>
+        <button class="modal-btn primary" id="unlockAllCosmeticsBtn" style="width:100%;">👑 Unlock All Cosmetics</button>
+        <button class="modal-btn primary" id="unlockAllBgsBtn" style="width:100%;">🎨 Unlock All Backgrounds</button>
+        <button class="modal-btn primary" id="unlockAllEmotesBtn" style="width:100%;">😄 Unlock All Emotes</button>
+        <button class="modal-btn secondary" id="grantBookAdminBtn" style="width:100%;">📚 Grant Study Book</button>
+        <button class="modal-btn secondary" id="grantFreezerAdminBtn" style="width:100%;">❄️ Grant Streak Freezer</button>
+      </div>
+    </div>
+
+    <!-- DANGER TAB -->
+    <div class="admin-tab-panel" id="adminTab-danger" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <button style="width:100%;background:linear-gradient(135deg,#FF6B6B,#FF5B5B);color:white;border:none;border-radius:13px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;" id="killBuddyAdminBtn">💀 Kill Buddy</button>
+        <button style="width:100%;background:linear-gradient(135deg,#6BCF7F,#5ABF6F);color:white;border:none;border-radius:13px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;" id="reviveBuddyAdminBtn">✨ Instant Revive</button>
+        <button class="modal-btn secondary" id="clearStudyDataBtn" style="width:100%;color:#FF6B6B;">🗑️ Clear Study History</button>
+        <button class="modal-btn secondary" id="clearTodosAdminBtn" style="width:100%;color:#FF6B6B;">🗑️ Clear All Todos</button>
+        <button class="modal-btn secondary" id="rawStatsBtnAdmin" style="width:100%;">🔧 View Raw Stats</button>
+      </div>
+    </div>
+
+    <button class="modal-btn secondary" id="cancelEditBtn" style="width:100%;margin-top:12px;">✕ Close Admin Panel</button>
+  </div>
+</div>
+
+<div class="modal" id="streakModal">
+  <div class="modal-content" style="max-width: 280px;">
+    <div class="modal-title">🔥 Daily Streak</div>
+    <div class="modal-text" style="text-align: left;">
+      Keep streak by doing a session more than 5 minutes every day. If you get 15 days tell EthanGenius!!
+      <br><br>
+      💡 Buy a Streak Freezer (60 🪙) from the shop to protect your streak for 1 missed day!
+      <br><br>
+      Miss a day and your streak resets to 0. 
+    </div>
+    <button class="modal-btn primary" id="closeStreakBtn" style="width: 100%;">Got it!</button>
+  </div>
+</div>
+
+<!-- Pause Warning Modal -->
+<div class="modal" id="pauseModal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-title">⏸️ Session Paused</div>
+    <div id="pauseQuote" class="modal-text" style="font-style: italic; margin-bottom: 20px;"></div>
+    <div style="font-size: 48px; font-weight: 700; color: #FFB84D; margin: 15px 0;" id="pauseTimer">0:00</div>
+    <div class="modal-text" style="color: #FF6B6B; font-weight: 600;">⚠️ Pauses longer than 7 minutes will cost you coins!</div>
+    <div class="modal-text" style="font-size: 12px; margin-top: 10px;">-1 🪙 every 30 seconds after 7 minutes</div>
+    <button class="modal-btn primary" id="resumePauseBtn" style="width: 100%; margin-top: 15px;">Resume Session</button>
+  </div>
+</div>
+
+<div class="modal" id="deathModal">
+  <div class="modal-content">
+    <div class="modal-title">💀 Your buddy died!</div>
+    <div class="modal-text">Feed it 3 carrots to revive</div>
+    <button class="modal-btn primary" id="okDeathBtn" style="width: 100%;">Alright...</button>
+  </div>
+</div>
+
+<!-- Color Selection Modal -->
+<div class="modal" id="colorModal">
+  <div class="modal-content">
+    <div class="modal-title">Color Tag</div>
+    <div class="modal-text">Select a color for this session block</div>
+    <div class="color-grid" id="colorGrid"></div>
+    <input type="text" id="subjectNameInput" placeholder="subject choice" style="display:none;">
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="skipColorBtn">Skip</button>
+      <button class="modal-btn primary" id="saveColorBtn" style="display:none;">Save Tag</button>
+    </div>
+  </div>
+</div>
+
+<!-- Memory Match Game -->
+<div class="game-overlay" id="gameOverlay">
+  <div class="game-container">
+    <button class="game-close" id="gameClose">×</button>
+    <div class="game-title">🧠 Memory Match</div>
+    <div class="game-stats">
+      <div>Moves: <span id="moveCount">0</span></div>
+      <div>Matches: <span id="matchCount">0</span>/8</div>
+    </div>
+    <div class="memory-grid" id="memoryGrid"></div>
+    <div class="game-complete" id="gameComplete">
+      <div class="game-complete-title">🎉 You Win!</div>
+      <div class="game-complete-text">Completed in <span id="finalMoves">0</span> moves!</div>
+      <button class="modal-btn primary" onclick="resetMemoryGame()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<div class="reward-popup" id="rewardPopup">
+  <div class="reward-title">Session Complete! 🎉</div>
+  <div class="reward-text">You earned:</div>
+  <div class="reward-amount" id="rewardAmount">+2 🪙</div>
+</div>
+<div class="modal" id="sessionCompleteModal">
+  <div class="modal-content">
+    <div class="modal-title">🎉 Session Complete!</div>
+    <div class="modal-text" id="sessionCompleteText">Great work!</div>
+    <div class="reward-amount" id="sessionCompleteReward" style="margin-bottom: 18px;">+0 🪙</div>
+    <button class="modal-btn primary" id="sessionCompleteBtn" style="width: 100%;">Continue</button>
+  </div>
+</div>
+<div class="modal" id="achievementsModal">
+  <div class="modal-content" style="max-height: 70vh; overflow-y: auto;">
+    <div class="modal-title">🏆 Achievements</div>
+    <div id="achievementsList"></div>
+    <button class="modal-btn primary" id="closeAchievementsBtn" style="width: 100%; margin-top: 14px;">Close</button>
+  </div>
+</div>
+
+<!-- Raw Stats Modal -->
+<div class="modal" id="rawStatsModal">
+  <div class="modal-content" style="max-width: 90%; max-height: 80vh; overflow-y: auto; text-align: left;">
+    <div class="modal-title">🔧 Raw State Data</div>
+    <div id="rawStatsContent" style="font-family: monospace; font-size: 11px; white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px; overflow-x: auto;"></div>
+    <button class="modal-btn primary" id="closeRawStatsBtn" style="width: 100%; margin-top: 14px;">Close</button>
+    <button class="modal-btn secondary" id="copyRawStatsBtn" style="width: 100%; margin-top: 8px;">📋 Copy to Clipboard</button>
+  </div>
+</div>
+
+<div class="modal" id="feedbackModal">
+  <div class="modal-content" style="max-width: 340px; text-align: left; padding: 28px 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+      <div class="modal-title" style="margin: 0; font-size: 18px;">Share Feedback</div>
+      <div id="closeFeedbackModalBtn" style="font-size: 22px; color: #aaa; cursor: pointer; line-height: 1; padding: 4px;">×</div>
+    </div>
+    <div style="font-size: 12px; color: #9B8F83; font-weight: 500; margin-bottom: 20px;">Your feedback goes directly to the developer.</div>
+    <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+      <button class="feedback-type-btn active" data-type="suggestion" style="flex:1;padding:8px 4px;border:2px solid transparent;border-radius:10px;background:#f4f4f4;font-size:12px;font-weight:700;cursor:pointer;color:#2D3142;">💡 Suggestion</button>
+      <button class="feedback-type-btn" data-type="bug" style="flex:1;padding:8px 4px;border:2px solid transparent;border-radius:10px;background:#f4f4f4;font-size:12px;font-weight:700;cursor:pointer;color:#2D3142;">🐛 Bug Report</button>
+      <button class="feedback-type-btn" data-type="other" style="flex:1;padding:8px 4px;border:2px solid transparent;border-radius:10px;background:#f4f4f4;font-size:12px;font-weight:700;cursor:pointer;color:#2D3142;">💬 Other</button>
+    </div>
+    <textarea id="feedbackText" placeholder="Describe your idea or issue clearly..." style="width:100%;padding:13px;border:2px solid #E8E8E8;border-radius:12px;font-size:13px;min-height:100px;resize:none;font-family:inherit;color:#2D3142;background:#FAFAFA;outline:none;transition:border 0.2s;line-height:1.5;"></textarea>
+    <input type="text" id="feedbackContact" placeholder="Contact (optional — email or Discord)" style="width:100%;padding:11px 13px;border:2px solid #E8E8E8;border-radius:12px;font-size:12px;font-family:inherit;color:#2D3142;background:#FAFAFA;outline:none;margin-top:8px;transition:border 0.2s;">
+    <div style="font-size:10px;color:#B0A89E;margin-top:5px;margin-bottom:16px;font-weight:500;">If you'd like a reply, drop a way we can reach you.</div>
+    <button id="submitFeedbackBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#6BCF7F 0%,#5ABF6F 100%);border:none;border-radius:13px;font-size:15px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 14px rgba(107,207,127,0.35);">Send Feedback</button>
+    <div id="feedbackStatus" style="text-align:center;font-size:12px;font-weight:600;margin-top:10px;min-height:16px;color:#6B7080;"></div>
+  </div>
+</div>
+
+<div class="menu-overlay" id="menuOverlay">
+  <div class="menu-drawer" id="menuDrawer">
+    <div class="menu-close" id="menuClose">×</div>
+    <div class="menu-item" id="aboutBtn">ℹ️ About</div>
+    <div class="menu-item" id="historyBtn">📅 History</div>
+    <div class="menu-item" id="helpBtn">❓ Help</div>
+  </div>
+</div>
+
+<script>
+const state = {
+  mode: 'focus',
+  isRunning: false,
+  isPaused: false,
+  timeLeft: 25 * 60,
+  coins: 0,
+  carrots: 0,
+  streak: 0,
+  lastStreakDate: null,
+  streakFreezeActive: false,
+  hasBook: false,
+  reborns: 0,
+  isReborning: false,
+  rebornTimeLeft: 0,
+  revivals: 0,
+  happiness: 100,
+  longestSession: 0,
+  longestBreak: 0,
+  highestCoins: 0,
+  carrotsFed: 0,
+  characterWidth: 140,
+  maxWidth: 420,
+  unlockedAchievements: [],
+  studyMinutes: {},
+  breakMinutes: {},
+  sessionColors: {}, 
+  colorSubjects: {}, 
+  todos: [],
+  timerInterval: null,
+  happyDecayInterval: null,
+  emojiInterval: null,
+  durations: { focus: 25, long: 15 },
+  stopwatchTime: 0,
+  pauseStartTime: null, 
+  pauseInterval: null, 
+  pauseElapsed: 0,
+  rebornInterval: null,
+  todoSort: 'deadline',
+  currentCalendarMonth: new Date().getMonth(),
+  currentCalendarYear: new Date().getFullYear(),
+  ownedCosmetics: [],
+  ownedBackgrounds: ['default'],
+  ownedEmotes: [],
+  equippedCosmetic: null,
+  equippedEmote: null,
+  activeBackground: 'default',
+  isDead: false,
+  isReviving: false,
+  showFloatingEmojis: true,
+  soundEnabled: false,
+  autoStartBreaks: false,
+  backgroundOpacity: 0.1,
+  lastHappyDecay: Date.now(),
+  studyingDisabledUntil: null, // 
+  gameActive: false, // 
+  currentGraphFilter: 'all'
+};
+
+const cosmetics = [
+  { id: 'tophat', name: 'Top Hat', price: 150, icon: '🎩' },
+  { id: 'wizard', name: 'Wizard Hat', price: 200, icon: '🧙' },
+  { id: 'pirate', name: 'Pirate Hat', price: 180, icon: '🏴‍☠️' }
+];
+
+const emotes = [
+  { id: 'wave', name: 'Wave', price: 30, icon: '👋', animation: 'wave' },
+  { id: 'love', name: 'Love', price: 30, icon: '❤️', animation: 'love' },
+  { id: 'star', name: 'Star Eyes', price: 30, icon: '🤩', animation: 'starstruck' },
+  { id: 'crazy', name: 'Go Crazy!', price: 70, icon: '🤪', animation: 'crazy' }
+];
+
+const studyColors = [
+  { hex: '#FFE5E5', name: 'Light Pink' },
+  { hex: '#FFB3D9', name: 'Pink' },
+  { hex: '#FF4757', name: 'Red' },
+  { hex: '#DDA0DD', name: 'Light Purple' },
+  { hex: '#9B59B6', name: 'Deep Purple' },
+  { hex: '#3742FA', name: 'Royal Blue' },
+  { hex: '#70A1FF', name: 'Soft Blue' },
+  { hex: '#48DBFB', name: 'Cyan' },
+  { hex: '#C7ECEE', name: 'Light Green' },
+  { hex: '#95AEA3', name: 'Sage Green' },
+  { hex: '#2F8B4E', name: 'Dark Green' },
+  { hex: '#FFF5E1', name: 'Cream' },
+  { hex: '#FFDAB9', name: 'Peach' },
+  { hex: '#D2691E', name: 'Orange Brown' },
+  { hex: '#FA8072', name: 'Coral' }
+];
+
+const motivationalQuotes = [
+  "If you could get up the courage to begin, you have the courage to succeed.",
+  "Fear is only as deep as the mind allows.",
+  "Fear is a reaction. Courage is a decision.",
+  "There's no courage without fear.",
+  "If opportunity doesn't knock, build a door.",
+  "The best way to predict the future is to create it. — Peter Drucker",
+  "Smart people learn from their mistakes, but intelligent people learn from others mistakes.",
+  "Build your own dreams, or someone else will hire you to build theirs.",
+  "If my mind can conceive it … then I can achieve it. — Muhammad Ali",
+  "Don't count the days. Make the days count. — Muhammad Ali",
+  "Go as far as you can see; when you get there, you'll see further.",
+  "If your dreams don't scare you, they're not big enough.",
+  "Fear kills more dreams than failure ever will.",
+  "Whatever the mind of man can conceive and believe, it can achieve.",
+  "If the path to your goal is too tricky, change the path, but never the goal.",
+  "You must do the things you think you cannot do.",
+  "Courage is going from failure to failure without losing enthusiasm. - Winston Churchill",
+  "If you want something you’ve never had, you must be willing to do something you’ve never done.",
+  "We must not be living in our dreams if we are living with our fears.",
+  "You can, you should, and if you're brave enough to start, you will.",
+  "If you are always afraid of the day it cannot always b ae night",
+  "You can, you should, and if you're brave enough to start, you will. - Stephen King",
+  "If you want something you’ve never had, you must be willing to do something you’ve never done.",
+  "You can conquer almost any fear if you will make up your mind to do so. For remember, fear doesn't exist anywhere except in the mind."
+];
+
+const backgrounds = [
+  { id: 'default', name: 'Desert', gradient: 'linear-gradient(120deg, #e6d4bf, #c4a07a, #a5845a, #d4b68f)', stars: false, price: 0 },
+  { id: 'ocean', name: 'Ocean', gradient: 'linear-gradient(120deg, #a8dadc, #457b9d, #1d3557, #f1faee)', stars: true, price: 100 },
+  { id: 'sunset', name: 'Sunset', gradient: 'linear-gradient(120deg, #ffadad, #ffd6a5, #fdffb6, #caffbf)', stars: true, price: 150 },
+  { id: 'lavender', name: 'Lavender', gradient: 'linear-gradient(120deg, #d8b5ff, #9d84b7, #6b5b95, #e8c1ff)', stars: true, price: 150 },
+  { id: 'mint', name: 'Mint', gradient: 'linear-gradient(120deg, #9bf6ff, #a0c4ff, #bdb2ff, #ffc6ff)', stars: true, price: 200 },
+  { id: 'rose', name: 'Rose', gradient: 'linear-gradient(120deg, #ffcad4, #f4acb7, #d8a7b1, #ffe5ec)', stars: true, price: 200 },
+  { id: 'midnight', name: 'Midnight', gradient: 'linear-gradient(120deg, #0b0c10, #1f2833, #45a29e, #66fcf1)', stars: true, price: 300 },
+  { id: 'forest', name: 'Forest', gradient: 'linear-gradient(120deg, #52b788, #40916c, #2d6a4f, #95d5b2)', stars: false, price: 250 }
+];
+
+const studyEmojis = ['📚', '✏️', '📖', '📝', '🎓', '💡'];
+
+const character = document.getElementById('character');
+const timerDisplay = document.getElementById('timerDisplay');
+const sessionLabel = document.getElementById('sessionLabel');
+const actionBtn = document.getElementById('actionBtn');
+const stopBtn = document.getElementById('stopBtn');
+const happyFill = document.getElementById('happyFill');
+const happyPercent = document.getElementById('happyPercent');
+const cosmeticContainer = document.getElementById('cosmeticContainer');
+const carrotIcon = document.getElementById('carrotIcon');
+
+const _k = (() => { const f = atob; return f('OTg3MTIz'); })();
+let draggedCarrot = null;
+let editingTimer = null;
+let currentShopCategory = 'items';
+
+function updateStreak() {
+  const today = getTodayDateString();
+  if (state.lastStreakDate !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    
+    if (state.lastStreakDate === yesterdayStr || state.lastStreakDate === null) {
+      state.streak++;
+    } else {
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      const twoDaysAgoStr = `${twoDaysAgo.getFullYear()}-${String(twoDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(twoDaysAgo.getDate()).padStart(2, '0')}`;
+      
+      if (state.streakFreezeActive && state.lastStreakDate === twoDaysAgoStr) {
+        state.streak++;
+        state.streakFreezeActive = false;
+        document.getElementById('freezeIndicator').textContent = '';
+        alert('❄️ Streak Freezer used! Your streak is safe.');
+      } else {
+        state.streak = 1;
+      }
+    }
+    state.lastStreakDate = today;
+    document.getElementById('streakCount').textContent = state.streak;
+  }
+}
+
+function showColorSelection(duration) {
+  const grid = document.getElementById('colorGrid');
+  const subjectInput = document.getElementById('subjectNameInput');
+  const saveBtn = document.getElementById('saveColorBtn');
+  const modal = document.getElementById('colorModal');
+  
+  grid.innerHTML = '';
+  subjectInput.style.display = 'block';
+  subjectInput.value = '';
+  subjectInput.placeholder = 'Name your subject...';
+  saveBtn.style.display = 'none';
+  saveBtn.disabled = false; // Reset button state
+  
+  let selectedColor = null;
+  
+  studyColors.forEach(color => {
+    const el = document.createElement('div');
+    el.className = 'color-option';
+    el.style.background = color.hex;
+    
+    // Show existing label if this color is already used
+    if (state.colorSubjects[color.hex]) {
+      const label = document.createElement('div');
+      label.style.cssText = 'position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 8px; background: rgba(0,0,0,0.7); color: white; padding: 2px 4px; border-radius: 4px; white-space: nowrap;';
+      label.textContent = state.colorSubjects[color.hex].substring(0, 8);
+      el.appendChild(label);
+    }
+    
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedColor = color;
+      
+      if (state.colorSubjects[color.hex]) {
+        subjectInput.value = state.colorSubjects[color.hex];
+      } else {
+        subjectInput.value = '';
+        subjectInput.placeholder = `Name this ${color.name.toLowerCase()} subject...`;
+      }
+      
+      subjectInput.style.display = 'block';
+      saveBtn.style.display = 'block';
+      setTimeout(() => subjectInput.focus(), 100);
+    });
+    
+    grid.appendChild(el);
+  });
+  
+  saveBtn.onclick = () => {
+    if (saveBtn.disabled) return; // Prevent double-click
+    
+    if (!selectedColor) {
+      alert('⚠️ Please select a color!');
+      return;
+    }
+    
+    const subjectName = subjectInput.value.trim();
+    if (!subjectName) {
+      alert('⚠️ Please name this subject!');
+      subjectInput.focus();
+      return;
+    }
+    
+    // Disable button to prevent spam
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    state.colorSubjects[selectedColor.hex] = subjectName;
+    
+    const todayStr = getTodayDateString();
+    const sessionKey = `${todayStr}-${Date.now()}`;
+    state.sessionColors[sessionKey] = {
+      color: selectedColor.hex,
+      subject: subjectName,
+      duration: duration
+    };
+    
+    modal.classList.remove('active');
+    renderGraph();
+    saveState();
+    
+    // Reset button
+    saveBtn.textContent = 'Save Tag';
+    saveBtn.disabled = false;
+  };
+  
+  // Prevent clicking outside
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      alert('⚠️ Please complete color tagging to continue!');
+    }
+  };
+  
+  modal.classList.add('active');
+}
+
+document.getElementById('skipColorBtn').addEventListener('click', () => {
+  document.getElementById('colorModal').classList.remove('active');
+});
+
+// Memory Match Game
+let memoryCards = [];
+let flippedCards = [];
+let matchedPairs = 0;
+let moves = 0;
+let canFlip = true;
+
+const memoryEmojis = ['📚', '✏️', '🎯', '💡', '🏆', '⭐', '🎨', '🚀'];
+
+function initMemoryGame() {
+  const pairs = [...memoryEmojis, ...memoryEmojis];
+  memoryCards = pairs.sort(() => Math.random() - 0.5);
+  flippedCards = [];
+  matchedPairs = 0;
+  moves = 0;
+  canFlip = true;
+  
+  document.getElementById('moveCount').textContent = '0';
+  document.getElementById('matchCount').textContent = '0';
+  document.getElementById('gameComplete').classList.remove('show');
+  
+  const grid = document.getElementById('memoryGrid');
+  grid.innerHTML = '';
+  
+  memoryCards.forEach((emoji, index) => {
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.dataset.index = index;
+    card.dataset.emoji = emoji;
+    card.textContent = emoji;
+    card.addEventListener('click', () => flipCard(card));
+    grid.appendChild(card);
+  });
+}
+
+function flipCard(card) {
+  if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length >= 2) return;
+  
+  card.classList.add('flipped');
+  flippedCards.push(card);
+  
+  if (flippedCards.length === 2) {
+    moves++;
+    document.getElementById('moveCount').textContent = moves;
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  canFlip = false;
+  const [card1, card2] = flippedCards;
+  
+  if (card1.dataset.emoji === card2.dataset.emoji) {
+    setTimeout(() => {
+      card1.classList.add('matched');
+      card2.classList.add('matched');
+      matchedPairs++;
+      document.getElementById('matchCount').textContent = matchedPairs;
+      flippedCards = [];
+      canFlip = true;
+      
+      if (matchedPairs === 8) {
+        setTimeout(() => {
+          document.getElementById('finalMoves').textContent = moves;
+          document.getElementById('gameComplete').classList.add('show');
+        }, 500);
+      }
+    }, 500);
+  } else {
+    setTimeout(() => {
+      card1.classList.remove('flipped');
+      card2.classList.remove('flipped');
+      flippedCards = [];
+      canFlip = true;
+    }, 1000);
+  }
+}
+
+function resetMemoryGame() {
+  initMemoryGame();
+}
+
+document.getElementById('gameClose').addEventListener('click', () => {
+  document.getElementById('gameOverlay').classList.remove('active');
+});
+
+// Emote System
+let emoteOnCooldown = false;
+
+character.addEventListener('click', () => {
+  if (!state.equippedEmote || state.isDead || emoteOnCooldown) return;
+  
+  emoteOnCooldown = true;
+  
+  const emote = emotes.find(e => e.id === state.equippedEmote);
+  if (!emote) return;
+  
+  character.classList.add(`emote-${emote.animation}`);
+  
+  const emoteFloat = document.createElement('div');
+  emoteFloat.className = 'emote-float';
+  emoteFloat.textContent = emote.icon;
+  const rect = character.getBoundingClientRect();
+  emoteFloat.style.left = (rect.left + rect.width / 2) + 'px';
+  emoteFloat.style.top = (rect.top + 20) + 'px';
+  document.body.appendChild(emoteFloat);
+  
+  const duration = emote.id === 'crazy' ? 2000 : 1500;
+  
+  setTimeout(() => {
+    character.classList.remove(`emote-${emote.animation}`);
+    emoteFloat.remove();
+    emoteOnCooldown = false;
+  }, duration);
+});
+
+
+function getTodayDateString() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+function startHappyDecay() {
+  if (state.happyDecayInterval) return;
+  
+  state.happyDecayInterval = setInterval(() => {
+    if (state.happiness > 0 && !state.isDead && !state.isReviving) {
+      const now = Date.now();
+      const hoursPassed = (now - state.lastHappyDecay) / (1000 * 60 * 60);
+      
+      if (hoursPassed >= 1) {
+        state.happiness = Math.max(0, state.happiness - 10);
+        state.lastHappyDecay = now;
+        
+        if (state.happiness === 0) {
+          handleDeath();
+        }
+        
+        updateDisplay();
+      }
+    }
+  }, 60000);
+}
+
+function handleDeath() {
+  state.isDead = true;
+  state.carrotsFed = 0;
+  updateCharacterAppearance();
+  document.getElementById('deathModal').classList.add('active');
+}
+
+function spawnFloatingEmoji() {
+  if (!state.isRunning || state.mode !== 'focus' || !state.showFloatingEmojis) return;
+  
+  const emoji = document.createElement('div');
+  emoji.className = 'floating-emoji';
+  emoji.textContent = studyEmojis[Math.floor(Math.random() * studyEmojis.length)];
+  
+  const charRect = character.getBoundingClientRect();
+  emoji.style.left = `${charRect.left + Math.random() * charRect.width}px`;
+  emoji.style.top = `${charRect.top + charRect.height / 2}px`;
+  
+  document.body.appendChild(emoji);
+  setTimeout(() => emoji.remove(), 3000);
+}
+
+function startFloatingEmojis() {
+  if (state.emojiInterval) clearInterval(state.emojiInterval);
+  state.emojiInterval = setInterval(spawnFloatingEmoji, 30000);
+}
+
+function stopFloatingEmojis() {
+  if (state.emojiInterval) {
+    clearInterval(state.emojiInterval);
+    state.emojiInterval = null;
+  }
+}
+
+function updateCharacterAppearance() {
+  character.className = 'character';
+  
+  if (state.isReborning) {
+    character.classList.add('reborning');
+  } else if (state.isReviving) {
+    character.classList.add('reviving');
+  } else if (state.isDead) {
+    character.classList.add('melted');
+  } else if (state.happiness <= 20) {
+    character.classList.add('very-sad');
+  } else if (state.happiness <= 50) {
+    character.classList.add('sad');
+  }
+  
+  if (state.isRunning && state.mode === 'focus' && !state.isDead) {
+    character.classList.add('focused');
+  }
+  
+  const grayAmount = state.isDead ? 100 : Math.max(0, 100 - state.happiness * 2);
+  character.style.filter = `saturate(${100 - grayAmount}%) brightness(${100 - grayAmount * 0.3}%)`;
+  
+  // Reborn glow evolution
+  const body = character.querySelector('.character-body');
+  if (state.reborns > 0 && !state.isDead && !state.isReborning) {
+    const glow = Math.min(state.reborns * 4, 40);
+    const half = glow / 2;
+    const color = state.reborns >= 10 ? '#FFD700' 
+                : state.reborns >= 7  ? '#C084FC' 
+                : state.reborns >= 4  ? '#60A5FA' 
+                : '#6BCF7F';
+    body.style.boxShadow = `0 10px 28px rgba(0,0,0,0.2), 0 0 ${glow}px ${half}px ${color}`;
+    
+    // Increase breathing intensity per reborn
+    if (state.reborns >= 7) {
+      character.style.animation = 'breatheMax 1.8s ease-in-out infinite alternate';
+    } else if (state.reborns >= 4) {
+      character.style.animation = 'breatheFast 2.2s ease-in-out infinite alternate';
+    } else {
+      character.style.animation = `breathe ${Math.max(1.8, 3 - state.reborns * 0.2)}s ease-in-out infinite alternate`;
+    }
+  } else if (!state.isReborning && !state.isReviving) {
+    if (body) body.style.boxShadow = '0 10px 28px rgba(0,0,0,0.2)';
+    character.style.animation = 'breathe 3s ease-in-out infinite alternate';
+  }
+}
+
+
+function renderCosmetic() {
+  cosmeticContainer.innerHTML = '';
+  
+  if (!state.equippedCosmetic || state.isDead) return;
+  
+  let html = '';
+  switch(state.equippedCosmetic) {
+    case 'tophat':
+      html = '<div class="top-hat"><div class="top-hat-top"></div><div class="top-hat-brim"></div></div>';
+      break;
+    case 'wizard':
+      html = '<div class="wizard-hat"></div>';
+      break;
+    case 'pirate':
+      html = '<div class="pirate-hat"></div>';
+      break;
+  }
+  
+  cosmeticContainer.innerHTML = html;
+}
+
+function renderEmote() {
+  // Emotes don't render on character, they're click-activated
+  // This function exists for consistency with cosmetics system
+}
+
+function renderBook() {
+  const existingBook = document.querySelector('.reading-book');
+  if (existingBook) {
+    existingBook.remove();
+  }
+  
+  if (!state.hasBook || !state.isRunning || state.mode !== 'focus' || state.isDead) return;
+  
+  const bookHTML = `
+    <div class="reading-book">
+      <div class="book-shadow"></div>
+      <div class="book-3d">
+        <div class="book-back-cover"></div>
+        <div class="book-pages-bulk"></div>
+        <div class="book-spine-edge"></div>
+        <div class="book-left-page"></div>
+        <div class="book-right-page"></div>
+        <div class="page-flip">
+          <div class="page-flip-front"></div>
+          <div class="page-flip-back"></div>
+        </div>
+        <div class="page-flip">
+          <div class="page-flip-front"></div>
+          <div class="page-flip-back"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  character.insertAdjacentHTML('beforeend', bookHTML);
+}
+
+function setBackground(bgId) {
+  const bg = backgrounds.find(b => b.id === bgId);
+  if (bg) {
+    document.body.style.background = bg.gradient;
+    document.body.style.backgroundSize = '400% 400%';
+    document.body.style.animation = 'brownFlow 15s linear infinite';
+    
+    const overlay = document.getElementById('bgOverlay');
+    overlay.innerHTML = '';
+    
+    if (bg.stars) {
+      for (let i = 0; i < 20; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.animationDelay = `${Math.random() * 3}s`;
+        overlay.appendChild(star);
+      }
+    }
+    
+    state.activeBackground = bgId;
+    renderShop();
+  }
+}
+function applyBlur() {
+  const blur = state.blurAmount;
+  document.getElementById('blurValue').textContent = blur + 'px';
+  
+  document.querySelectorAll('.top-bar, .timer-area, .happy-meter-container, .mode-tabs').forEach(el => {
+    el.style.backdropFilter = `blur(${blur}px)`;
+  });
+}
+function applyOpacity() {
+  const opacity = state.backgroundOpacity;
+  const percentage = Math.round(opacity * 100);
+  document.getElementById('opacityValue').textContent = percentage + '%';
+  
+  const timerArea = document.querySelector('.timer-area');
+  if (timerArea) {
+    timerArea.style.background = `rgba(255, 255, 255, ${opacity})`;
+  }
+  
+  const happyMeter = document.querySelector('.happy-meter-container');
+  if (happyMeter) {
+    happyMeter.style.background = `rgba(255, 255, 255, ${opacity * 0.8})`;
+  }
+}
+
+function updateCurrencyDisplays() {
+  ['coinsDisplay', 'coinsDisplay2', 'coinsDisplay3', 'coinsDisplay4', 'coinsDisplay5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = state.coins;
+  });
+  
+  ['carrotsDisplay', 'carrotsDisplay2', 'carrotsDisplay3', 'carrotsDisplay4', 'carrotsDisplay5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = state.carrots;
+  });
+  
+  if (state.coins > state.highestCoins) {
+    state.highestCoins = state.coins;
+  }
+}
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function updateDisplay() {
+  timerDisplay.textContent = state.mode === 'stopwatch' ? formatTime(state.stopwatchTime) : formatTime(state.timeLeft);
+  happyFill.style.width = `${state.happiness}%`;
+  happyPercent.textContent = Math.floor(state.happiness);
+  character.style.width = `${state.characterWidth}px`;
+  document.querySelector('.character-shadow').style.width = `${Math.min(state.characterWidth * 0.7, 180)}px`;
+  updateCurrencyDisplays();
+  updateStats();
+  updateCharacterAppearance();
+  document.getElementById('focusDurationValue').textContent = `${state.durations.focus} min`;
+  document.getElementById('longBreakValue').textContent = `${state.durations.long} min`;
+}
+
+function updateStats() {
+  document.getElementById('longestSession').textContent = `${state.longestSession}m`;
+  document.getElementById('longestBreak').textContent = `${state.longestBreak}m`;
+  document.getElementById('highestCoins').textContent = state.highestCoins;
+  document.getElementById('carrotsFed').textContent = state.carrotsFed;
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const monthEl = document.getElementById('calendarMonth');
+  if (!grid || !monthEl) return;
+  
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  monthEl.textContent = `${months[state.currentCalendarMonth]} ${state.currentCalendarYear}`;
+  
+  grid.innerHTML = '';
+  
+  const firstDay = new Date(state.currentCalendarYear, state.currentCalendarMonth, 1).getDay();
+  const daysInMonth = new Date(state.currentCalendarYear, state.currentCalendarMonth + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = getTodayDateString();
+  
+  for (let i = 0; i < firstDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'calendar-day empty';
+    grid.appendChild(empty);
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day';
+    dayEl.textContent = day;
+    
+    const dateStr = `${state.currentCalendarYear}-${String(state.currentCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    const hasStudy = state.studyMinutes[dateStr] && state.studyMinutes[dateStr] > 0;
+    const hasBreak = state.breakMinutes[dateStr] && state.breakMinutes[dateStr] > 0;
+    
+    if (hasStudy) {
+      dayEl.classList.add('studied');
+    } else if (hasBreak) {
+      // Show breaks in red
+      dayEl.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF5B5B 100%)';
+      dayEl.style.color = 'white';
+      dayEl.style.boxShadow = '0 2px 8px rgba(255,107,107,0.4)';
+    }
+
+    
+    const todosForDate = state.todos.filter(todo => todo.deadline === dateStr && !todo.completed);
+    if (todosForDate.length > 0) {
+      dayEl.classList.add('has-deadline');
+      dayEl.setAttribute('data-task-count', todosForDate.length);
+      dayEl.addEventListener('click', () => {
+        let tasksHTML = todosForDate.map(todo => `
+          <div style="text-align: left; margin-bottom: 12px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 10px;">
+            <div style="font-weight: 700; margin-bottom: 4px;">${todo.text}</div>
+            <div style="font-size: 12px; color: #6B7080;">${todo.description || 'No description'}</div>
+          </div>
+        `).join('');
+    
+        document.getElementById('viewTodoTitle').textContent = `${todosForDate.length} Task${todosForDate.length > 1 ? 's' : ''} on ${dateStr}`;
+        document.getElementById('viewTodoDescription').innerHTML = tasksHTML;
+        document.getElementById('viewTodoDeadline').textContent = '';
+        document.getElementById('todoViewModal').classList.add('active');
+      });
+    }
+    
+    if (dateStr === todayStr) {
+      dayEl.classList.add('today');
+    }
+    
+    grid.appendChild(dayEl);
+  }
+}
+
+function renderGraph() {
+  const canvas = document.getElementById('studyChart');
+  if (!canvas) return;
+  
+  const range = parseInt(document.getElementById('graphRange')?.value || 7);
+  
+  const days = [];
+  const colorDatasets = {};
+  const untaggedData = new Array(range).fill(0);
+  let totalMinutes = 0;
+  
+  // Build days and collect data
+  for (let i = range - 1; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    
+    if (range === 7) {
+      days.push(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()]);
+    } else {
+      days.push(`${date.getMonth() + 1}/${date.getDate()}`);
+    }
+    
+    const dayIndex = range - 1 - i;
+    let taggedMinutes = 0;
+    
+    // Get colored sessions for this day
+    const daySessions = Object.keys(state.sessionColors).filter(key => key.startsWith(dateStr));
+    
+    daySessions.forEach(sessionKey => {
+      const session = state.sessionColors[sessionKey];
+      const color = session.color;
+      const subject = session.subject || 'Untagged';
+      
+      if (!colorDatasets[color]) {
+        colorDatasets[color] = {
+          label: subject,
+          data: new Array(range).fill(0),
+          backgroundColor: color,
+          borderColor: color,
+          borderWidth: 2,
+          borderRadius: 6
+        };
+      }
+      
+      colorDatasets[color].data[dayIndex] += session.duration;
+      taggedMinutes += session.duration;
+    });
+    
+    // Handle untagged sessions (backwards compatibility)
+    const totalDayMinutes = state.studyMinutes[dateStr] || 0;
+    const untaggedMinutes = Math.max(0, totalDayMinutes - taggedMinutes);
+    untaggedData[dayIndex] = untaggedMinutes;
+    
+    totalMinutes += totalDayMinutes;
+  }
+  
+  document.getElementById('totalStudyTime').textContent = totalMinutes;
+  
+  // Build final datasets array
+  const datasets = Object.values(colorDatasets);
+  
+  // Add untagged data if it exists
+  if (untaggedData.some(val => val > 0)) {
+    datasets.push({
+      label: 'Untagged',
+      data: untaggedData,
+      backgroundColor: '#B8865C',
+      borderColor: '#A87652',
+      borderWidth: 2,
+      borderRadius: 6
+    });
+  }
+  
+  // Destroy old chart
+  if (window.studyChartInstance) {
+    window.studyChartInstance.destroy();
+  }
+  
+  // Create new chart
+  window.studyChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { 
+          display: datasets.length > 1,
+          position: 'bottom',
+          labels: {
+            boxWidth: 12,
+            padding: 6,
+            font: { size: 10 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.dataset.label}: ${context.parsed.y} min`;
+            },
+            footer: function(items) {
+              const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
+              return `Total: ${total} min`;
+            }
+          }
+        }
+      },
+      scales: { 
+        x: { 
+          stacked: true,
+          grid: { display: false }
+        },
+        y: { 
+          stacked: true,
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return value + 'm';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function checkAchievements() {
+  achievements.forEach(ach => {
+    if (!state.unlockedAchievements.includes(ach.id) && ach.check()) {
+      state.unlockedAchievements.push(ach.id);
+      showAchievementUnlock(ach);
+    }
+  });
+}
+
+function showAchievementUnlock(ach) {
+  const popup = document.createElement('div');
+  popup.className = 'reward-popup show';
+  popup.innerHTML = `
+    <div class="reward-title">Achievement Unlocked!</div>
+    <div style="font-size: 48px; margin: 10px 0;">${ach.icon}</div>
+    <div class="reward-text" style="font-weight: 700; font-size: 16px;">${ach.name}</div>
+    <div class="reward-amount" style="font-size: 13px; color: #6B7080;">${ach.desc}</div>
+  `;
+  document.body.appendChild(popup);
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => popup.remove(), 500);
+  }, 3000);
+}
+
+function renderAchievements() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = '';
+  
+  achievements.forEach(ach => {
+    const unlocked = state.unlockedAchievements.includes(ach.id);
+    const item = document.createElement('div');
+    item.className = 'todo-item';
+    item.style.opacity = unlocked ? '1' : '0.4';
+    item.innerHTML = `
+      <div style="font-size: 32px; flex-shrink: 0;">${unlocked ? ach.icon : '🔒'}</div>
+      <div class="todo-info">
+        <div class="todo-text">${ach.name}</div>
+        <div class="todo-deadline">${ach.desc}</div>
+      </div>
+      ${unlocked ? '<div style="font-size: 24px; color: #6BCF7F;">✓</div>' : ''}
+    `;
+    list.appendChild(item);
+  });
+}
+
+function createSparkles(element) {
+  const rect = element.getBoundingClientRect();
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      const x = rect.left + rect.width / 2 + (Math.random() - 0.5) * 110;
+      const y = rect.top + rect.height / 2 + (Math.random() - 0.5) * 35;
+      sparkle.style.left = `${x}px`;
+      sparkle.style.top = `${y}px`;
+      document.body.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 1200);
+    }, i * 55);
+  }
+}
+
+function playSound(type) {
+  if (!state.soundEnabled) return;
+  const audio = new Audio();
+  audio.src = type === 'complete' ? 'https://assets.mixkit.co/active_storage/sfx/2869/2869.wav' : 'https://assets.mixkit.co/active_storage/sfx/2570/2570.wav';
+  audio.play();
+}
+
+function gainReward(coins) {
+  state.coins += coins;
+  
+  const rewardPopup = document.getElementById('rewardPopup');
+  const rewardAmount = document.getElementById('rewardAmount');
+  
+  rewardAmount.textContent = `+${coins} 🪙`;
+  
+  rewardPopup.classList.add('show');
+  setTimeout(() => rewardPopup.classList.remove('show'), 2500);
+  
+  updateDisplay();
+}
+
+function updateHappiness(change) {
+  if (state.isDead || state.isReviving) return;
+  
+  state.happiness = Math.max(0, Math.min(100, state.happiness + change));
+  
+  if (state.happiness === 0) {
+    handleDeath();
+  }
+  
+  updateDisplay();
+}
+
+function feedCarrot() {
+  if (state.carrots <= 0) return;
+  
+  if (state.isDead) {
+    state.carrots--;
+    state.carrotsFed++;
+    
+    const carrotsNeeded = 3 - (state.carrotsFed % 3 === 0 ? 0 : 3 - (state.carrotsFed % 3));
+    
+    if (state.carrotsFed % 3 === 0 && (state.carrotsFed / 3) > state.revivals) {
+      state.revivals++;
+      reviveBuddy();
+    }
+    checkAchievements();
+    updateDisplay();
+    return;
+  }
+  
+  // Check if reborning - can't feed during reborn
+  if (state.isReborning) {
+    alert('Your buddy is LITTERALY reborning, incase you couldnt tell, so you cant feed it until then...');
+    return;
+  }
+  
+  state.carrots--;
+  state.carrotsFed++;
+  
+  // Check for reborn (20+ carrots fed)
+  if (state.carrotsFed >= 20) {
+    triggerReborn();
+    return;
+  }
+  
+  const newWidth = state.characterWidth + 10;
+  state.characterWidth = Math.min(state.maxWidth, newWidth);
+  
+  // Calculate happiness with reborn bonus
+  const baseHappiness = 7.5;
+  const rebornBonus = 1 + (0.02 * state.reborns);
+  const happinessGain = baseHappiness * rebornBonus;
+  
+  updateHappiness(happinessGain);
+  character.classList.add('eating');
+  playSound('feed');
+  setTimeout(() => {
+    character.classList.remove('eating');
+    character.classList.add('happy');
+    createSparkles(character);
+    setTimeout(() => {
+      character.classList.remove('happy');
+      updateCharacterAppearance();
+    }, 800);
+  }, 950);
+  
+  checkAchievements();
+  updateDisplay();
+}
+
+function triggerReborn() {
+  state.isReborning = true;
+  state.rebornTimeLeft = 120;
+  updateCharacterAppearance();
+  
+  const skipNow = confirm('🎉 Stomach at max capacity!\n\n🏋️ Your buddy is entering REBORN phase!\n\n⏭️ Skip 2-minute animation?');
+  
+  if (skipNow) {
+    completeReborn();
+    return;
+  }
+  
+  // Show timer with skip option
+  const timerDiv = document.createElement('div');
+  timerDiv.className = 'reborn-timer';
+  timerDiv.id = 'rebornTimer';
+  timerDiv.innerHTML = `
+    <div class="reborn-title">🏋️ REBORN IN PROGRESS</div>
+    <div class="reborn-text">Working off that weight...</div>
+    <div class="reborn-countdown" id="rebornCountdown">2:00</div>
+    <div class="reborn-label">Time Remaining</div>
+    <button class="modal-btn primary" id="skipRebornBtn" style="margin-top: 15px; width: 100%;">⏭️ Skip Animation</button>
+  `;
+  document.body.appendChild(timerDiv);
+  
+  state.rebornInterval = setInterval(() => {
+    state.rebornTimeLeft--;
+    
+    const mins = Math.floor(state.rebornTimeLeft / 60);
+    const secs = state.rebornTimeLeft % 60;
+    const countdownEl = document.getElementById('rebornCountdown');
+    if (countdownEl) {
+      countdownEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    if (state.rebornTimeLeft <= 0) {
+      clearInterval(state.rebornInterval);
+      state.rebornInterval = null;
+      completeReborn();
+    }
+  }, 1000);
+  
+  // Skip button
+  setTimeout(() => {
+    document.getElementById('skipRebornBtn')?.addEventListener('click', () => {
+      if (state.rebornInterval) {
+        clearInterval(state.rebornInterval);
+        state.rebornInterval = null;
+      }
+      completeReborn();
+    });
+  }, 100);
+}
+
+function completeReborn() {
+  state.isReborning = false;
+  state.reborns++;
+  state.carrotsFed = 0;
+  state.characterWidth = 140;
+  
+  // Clean up timer and interval
+  if (state.rebornInterval) {
+    clearInterval(state.rebornInterval);
+    state.rebornInterval = null;
+  }
+  
+  const timerEl = document.getElementById('rebornTimer');
+  if (timerEl) {
+    timerEl.remove();
+  }
+  
+  updateCharacterAppearance();
+  checkAchievements();
+  saveState();
+  
+    if (state.reborns === 10) {
+  alert(`🏆🏆🏆 LEGENDARY - 10TH REBORN! 🏆🏆🏆\n\n✨ YOUR BUDDY HAS REACHED MAXIMUM POWER! ✨\n\n⭐ GOLDEN GLOW UNLOCKED ⭐\n\n📸 TAKE A SCREENSHOT OF THIS MESSAGE AND SEND IT TO ETHANGENIUS! 📸`);
+    } else {
+  alert(`✨ REBORN COMPLETE!\n\n🎊 Reborn Count: ${state.reborns}\n💪 Carrot effectiveness +${state.reborns * 2}%!\n${state.reborns >= 7 ? '🌟 L EGENDARY glow active!' : state.reborns >= 4 ? '💙 Epic glow active!' : '💚 Glow unlocked!'}\n\nYour buddy is fit and ready!`);
+    }
+  
+  updateDisplay();
+}
+
+function reviveBuddy() {
+  state.isDead = false;
+  state.isReviving = true;
+  updateCharacterAppearance();
+  
+  setTimeout(() => {
+    state.isReviving = false;
+    updateHappiness(1);
+    alert('✨ Your buddy is alive again!');
+    updateDisplay();
+  }, 5000);
+}
+
+function startTimer() {
+  if (state.studyingDisabledUntil && Date.now() < state.studyingDisabledUntil && state.mode === 'focus') {
+    const secondsLeft = Math.ceil((state.studyingDisabledUntil - Date.now()) / 1000);
+    alert(`⏳ Please wait ${secondsLeft}s before starting focus again!`);
+    return;
+  }
+  state.isRunning = true;
+  state.isPaused = false;
+  requestWakeLock();
+  sessionLabel.textContent = state.mode === 'focus' ? 'Stay focused!' : state.mode === 'stopwatch' ? 'Tracking time... ⏱️' : 'Enjoying your break! ☕';
+  if (state.mode === 'long') {
+    setTimeout(() => {
+      if (confirm('🎮 Want to play Memory Match during your break?')) {
+        initMemoryGame();
+        document.getElementById('gameOverlay').classList.add('active');
+      }
+    }, 1000);
+  }
+  actionBtn.textContent = 'Pause';
+  actionBtn.className = 'action-btn pause';
+  stopBtn.style.display = 'block';
+  
+  if (state.mode === 'focus') {
+    startFloatingEmojis();
+    updateCharacterAppearance();
+    renderBook();
+  }
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.style.pointerEvents = 'none';
+    tab.style.opacity = '0.5';
+  });
+  
+  state.timerInterval = setInterval(() => {
+    if (state.mode === 'stopwatch') {
+      state.stopwatchTime++;
+    } else {
+      state.timeLeft--;
+    }
+    updateDisplay();
+    
+    if (state.mode !== 'stopwatch' && state.timeLeft <= 0) {
+      completeSession();
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  state.isPaused = true;
+  state.pauseStartTime = Date.now();
+  state.pauseElapsed = 0;
+  clearInterval(state.timerInterval);
+  stopFloatingEmojis();
+  sessionLabel.textContent = 'Paused';
+  actionBtn.textContent = 'Resume';
+  actionBtn.className = 'action-btn';
+  updateCharacterAppearance();
+  
+  // Show pause modal with quote
+  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  document.getElementById('pauseQuote').textContent = `"${randomQuote}"`;
+  document.getElementById('pauseTimer').textContent = '0:00';
+  document.getElementById('pauseModal').style.display = 'flex';
+  
+  // Start pause penalty timer
+  state.pauseInterval = setInterval(() => {
+    state.pauseElapsed++;
+    const mins = Math.floor(state.pauseElapsed / 60);
+    const secs = state.pauseElapsed % 60;
+    document.getElementById('pauseTimer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    
+    // After 7 minutes, lose 1 coin every 30 seconds
+    if (state.pauseElapsed > 420 && state.pauseElapsed % 30 === 0) {
+      state.coins--;
+      updateDisplay();
+    }
+  }, 1000);
+}
+
+function resumeTimer() {
+  clearInterval(state.pauseInterval);
+  document.getElementById('pauseModal').style.display = 'none';
+  startTimer();
+}
+
+function stopTimer() {
+  state.isRunning = false;
+  state.isPaused = false;
+  clearInterval(state.timerInterval);
+  stopFloatingEmojis();
+  
+  if (state.mode === 'stopwatch') {
+    const duration = Math.floor(state.stopwatchTime / 60);
+    
+    if (duration >= 5) {
+    let coinsEarned = Math.floor(duration / 5) * 2;
+    if (state.hasBook) {
+        coinsEarned = Math.floor(coinsEarned * 1.5);
+        state.hasBook = false;
+    }
+    const todayStr = getTodayDateString();
+    state.studyMinutes[todayStr] = (state.studyMinutes[todayStr] || 0) + duration;
+  
+    if (duration > state.longestSession) {
+        state.longestSession = duration;
+    }
+  
+    gainReward(coinsEarned); // Popup shows reward, no alert needed
+    } else {
+    alert(`⏱️ Stopwatch stopped at ${duration} minutes. Study 5+ minutes to earn coins!`);
+    }
+    
+    state.stopwatchTime = 0;
+  } else {
+    state.timeLeft = state.durations[state.mode] * 60;
+    const penalty = Math.floor(Math.random() * 11) + 5;
+    updateHappiness(-penalty);
+    alert(`❌ Stopped mid-session! Lost ${penalty}% happiness`);
+  }
+  
+  sessionLabel.textContent = 'Ready to focus';
+  actionBtn.textContent = 'Start Focus';
+  actionBtn.className = 'action-btn';
+  stopBtn.style.display = 'none';
+
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.style.pointerEvents = 'auto';
+    tab.style.opacity = '1';
+  });
+  
+  updateDisplay();
+  renderBook();
+}
+
+function completeSession() {
+  clearInterval(state.timerInterval);
+  stopFloatingEmojis();
+  playSound('complete');
+  state.isRunning = false;
+  
+  if (state.mode === 'stopwatch') {
+    const duration = Math.floor(state.stopwatchTime / 60);
+    let coinsEarned = duration >= 5 ? Math.floor(duration / 5) * 2 : 0;
+    const bookUsed = state.hasBook && coinsEarned > 0;
+    
+    if (state.hasBook && coinsEarned > 0) {
+      coinsEarned = Math.floor(coinsEarned * 1.5);
+      state.hasBook = false;
+      renderBook(); // Remove book from display
+    }
+    
+    if (duration > state.longestSession) state.longestSession = duration;
+    
+    const todayStr = getTodayDateString();
+    state.studyMinutes[todayStr] = (state.studyMinutes[todayStr] || 0) + duration;
+    
+    if (duration >= 5) updateStreak();
+    
+    updateHappiness(20);
+    gainReward(coinsEarned);
+    checkAchievements();
+    character.classList.add('happy');
+    sessionLabel.textContent = 'Great work! 🎉';
+    createSparkles(character);
+    
+    document.getElementById('sessionCompleteText').textContent = `You studied for ${duration} minutes!`;
+    document.getElementById('sessionCompleteReward').textContent = `+${coinsEarned} 🪙`;
+    document.getElementById('sessionCompleteModal').classList.add('active');
+    
+    // Wait for modal to be dismissed, then show color selection
+    const modalBtn = document.getElementById('sessionCompleteBtn');
+    const modalHandler = () => {
+      document.getElementById('sessionCompleteModal').classList.remove('active');
+      state.timeLeft = 0;
+      state.stopwatchTime = 0;
+      character.classList.remove('happy');
+      updateCharacterAppearance();
+      sessionLabel.textContent = 'Ready to focus';
+      actionBtn.textContent = 'Start Stopwatch';
+      actionBtn.className = 'action-btn';
+      stopBtn.style.display = 'none';
+      
+      // Re-enable mode tabs
+      document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.style.pointerEvents = 'auto';
+        tab.style.opacity = '1';
+      });
+      
+      updateDisplay();
+      renderBook();
+      
+      // Show color selection after modal is dismissed
+      setTimeout(() => showColorSelection(duration), 300);
+      
+      // Show book alert if it was used
+      if (bookUsed) {
+        setTimeout(() => {
+          alert('📚 Study Book was used! The multiplier is gone. Buy another to use again!');
+        }, 500);
+      }
+      
+      saveState();
+      modalBtn.removeEventListener('click', modalHandler);
+    };
+    
+    modalBtn.addEventListener('click', modalHandler);
+    return;
+  }
+  
+  const duration = state.durations[state.mode];
+  
+  if (state.mode === 'focus') {
+    let coinsEarned = Math.floor(duration / 5) * 2;
+    const bookUsed = state.hasBook;
+    
+    if (state.hasBook) {
+      coinsEarned = Math.floor(coinsEarned * 1.5);
+      state.hasBook = false;
+      renderBook(); // Remove book from display
+    }
+    
+    if (duration > state.longestSession) state.longestSession = duration;
+    
+    const todayStr = getTodayDateString();
+    state.studyMinutes[todayStr] = (state.studyMinutes[todayStr] || 0) + duration;
+    
+    if (duration >= 5) updateStreak();
+    
+    updateHappiness(20);
+    gainReward(coinsEarned);
+    checkAchievements();
+    character.classList.add('happy');
+    sessionLabel.textContent = 'Great work! 🎉';
+    createSparkles(character);
+    
+    document.getElementById('sessionCompleteText').textContent = `You studied for ${duration} minutes!`;
+    document.getElementById('sessionCompleteReward').textContent = `+${coinsEarned} 🪙`;
+    document.getElementById('sessionCompleteModal').classList.add('active');
+    
+    // Wait for modal to be dismissed, then show color selection
+    const modalBtn = document.getElementById('sessionCompleteBtn');
+    const modalHandler = () => {
+      document.getElementById('sessionCompleteModal').classList.remove('active');
+      state.timeLeft = state.durations[state.mode] * 60;
+      character.classList.remove('happy');
+      updateCharacterAppearance();
+      sessionLabel.textContent = 'Ready to focus';
+      actionBtn.textContent = 'Start Focus';
+      actionBtn.className = 'action-btn';
+      stopBtn.style.display = 'none';
+      
+      // Re-enable mode tabs
+      document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.style.pointerEvents = 'auto';
+        tab.style.opacity = '1';
+      });
+      
+      updateDisplay();
+      renderBook();
+      
+      // Show color selection after modal is dismissed
+      setTimeout(() => showColorSelection(duration), 300);
+      
+      // Show book alert if it was used
+      if (bookUsed) {
+        setTimeout(() => {
+          alert('📚 Study Book was used! The multiplier is gone. Buy another to use again!');
+        }, 500);
+      }
+      
+      saveState();
+      modalBtn.removeEventListener('click', modalHandler);
+    };
+    
+    modalBtn.addEventListener('click', modalHandler);
+    
+  } else {
+    // BREAK MODE
+    if (duration > state.longestBreak) state.longestBreak = duration;
+    
+    const todayStr = getTodayDateString();
+    state.breakMinutes[todayStr] = (state.breakMinutes[todayStr] || 0) + duration;
+    
+    sessionLabel.textContent = 'Break complete!';
+    updateHappiness(10);
+    character.classList.add('happy');
+    createSparkles(character);
+    
+    // Disable studying for 2 minutes
+    state.studyingDisabledUntil = Date.now() + 120000;
+    
+    setTimeout(() => {
+      state.timeLeft = state.durations[state.mode] * 60;
+      character.classList.remove('happy');
+      updateCharacterAppearance();
+      sessionLabel.textContent = 'Ready to focus';
+      actionBtn.textContent = 'Start Break';
+      actionBtn.className = 'action-btn';
+      stopBtn.style.display = 'none';
+      
+      // Re-enable mode tabs
+      document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.style.pointerEvents = 'auto';
+        tab.style.opacity = '1';
+      });
+      
+      updateDisplay();
+      saveState();
+    }, 2500);
+  }
+}
+
+// Carrot drag & drop
+carrotIcon.addEventListener('mousedown', startDrag);
+carrotIcon.addEventListener('touchstart', startDrag);
+
+function startDrag(e) {
+  if (state.carrots <= 0) return;
+  e.preventDefault();
+  
+  draggedCarrot = document.createElement('div');
+  draggedCarrot.textContent = '🥕';
+  draggedCarrot.className = 'carrot-icon dragging';
+  document.body.appendChild(draggedCarrot);
+  
+  function onMove(e) {
+    const touch = e.touches ? e.touches[0] : e;
+    draggedCarrot.style.left = `${touch.clientX - 16}px`;
+    draggedCarrot.style.top = `${touch.clientY - 16}px`;
+  }
+  
+  function onEnd(e) {
+    const touch = e.changedTouches ? e.changedTouches[0] : e;
+    const charRect = character.getBoundingClientRect();
+    
+    if (touch.clientX >= charRect.left && touch.clientX <= charRect.right &&
+        touch.clientY >= charRect.top && touch.clientY <= charRect.bottom) {
+      feedCarrot();
+    }
+    
+    if (draggedCarrot) {
+      draggedCarrot.remove();
+      draggedCarrot = null;
+    }
+    
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+  }
+  
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchmove', onMove);
+  document.addEventListener('touchend', onEnd);
+  
+  onMove(e);
+}
+
+// Timer customization
+timerDisplay.addEventListener('click', () => {
+  if (state.isRunning || state.mode === 'stopwatch') return;
+  editingTimer = state.mode;
+  document.getElementById('timeModalTitle').textContent = `Set ${state.mode.charAt(0).toUpperCase() + state.mode.slice(1)} Duration`;
+  document.getElementById('minutesInput').value = state.durations[state.mode];
+  document.getElementById('timeModal').classList.add('active');
+});
+
+document.getElementById('focusDurationSetting').addEventListener('click', () => {
+  editingTimer = 'focus';
+  document.getElementById('timeModalTitle').textContent = 'Set Focus Duration';
+  document.getElementById('minutesInput').value = state.durations.focus;
+  document.getElementById('timeModal').classList.add('active');
+});
+
+
+document.getElementById('longBreakSetting').addEventListener('click', () => {
+  editingTimer = 'long';
+  document.getElementById('timeModalTitle').textContent = 'Set Long Break';
+  document.getElementById('minutesInput').value = state.durations.long;
+  document.getElementById('timeModal').classList.add('active');
+});
+
+document.getElementById('cancelTimeBtn').addEventListener('click', () => {
+  document.getElementById('timeModal').classList.remove('active');
+});
+
+document.getElementById('saveTimeBtn').addEventListener('click', () => {
+  const minutes = parseInt(document.getElementById('minutesInput').value);
+  if (minutes >= 1 && minutes <= 500) {
+    state.durations[editingTimer] = minutes;
+    if (state.mode === editingTimer && !state.isRunning) {
+      state.timeLeft = minutes * 60;
+    }
+    updateDisplay();
+  }
+  document.getElementById('timeModal').classList.remove('active');
+});
+
+// Event Listeners
+actionBtn.addEventListener('click', () => {
+  if (state.isDead) {
+    alert('Your buddy is dead! Feed it 3 carrots to revive.');
+    return;
+  }
+  
+  if (!state.isRunning) {
+    startTimer();
+  } else if (state.isPaused) {
+    resumeTimer();
+  } else {
+    pauseTimer();
+  }
+});
+
+stopBtn.addEventListener('click', stopTimer);
+
+
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // NEW: Check if studying is disabled
+    if (state.studyingDisabledUntil && Date.now() < state.studyingDisabledUntil && tab.dataset.mode === 'focus') {
+      const secondsLeft = Math.ceil((state.studyingDisabledUntil - Date.now()) / 1000);
+      alert(`⏳ Please wait ${secondsLeft}s before switching to focus!`);
+      return;
+    }
+    
+    if (state.isRunning) return;
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.mode = tab.dataset.mode;
+
+    if (state.mode === 'stopwatch') {
+      state.stopwatchTime = 0;
+      actionBtn.textContent = 'Start Stopwatch';
+      sessionLabel.textContent = 'Ready to track';
+    } else {
+      state.timeLeft = state.durations[state.mode] * 60;
+      if (state.mode === 'focus') {
+        actionBtn.textContent = 'Start Focus';
+        sessionLabel.textContent = 'Ready to focus';
+      } else {
+        actionBtn.textContent = 'Start Break';
+        sessionLabel.textContent = 'Ready to relax';
+      }
+    }
+    
+    updateDisplay();
+  });
+});
+
+// Navigation
+let currentPageIndex = 0;
+const pages = ['home', 'stats', 'todo', 'shop', 'settings'];
+
+document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    const newIndex = pages.indexOf(page);
+    
+    if (newIndex === currentPageIndex) return;
+    
+    const currentPage = document.getElementById(pages[currentPageIndex] + 'Page');
+    const newPage = document.getElementById(page + 'Page');
+    
+    if (newIndex > currentPageIndex) {
+      currentPage.classList.add('prev');
+      newPage.classList.add('active');
+    } else {
+      currentPage.classList.remove('active');
+      currentPage.classList.add('prev');
+      newPage.classList.remove('prev');
+      newPage.classList.add('active');
+    }
+    
+    setTimeout(() => {
+      currentPage.classList.remove('active', 'prev');
+    }, 400);
+    
+    currentPageIndex = newIndex;
+    
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll(`.nav-item[data-page="${page}"]`).forEach(i => i.classList.add('active'));
+    
+    if (page === 'shop') {
+      renderShop();
+    }
+    
+    if (page === 'stats') {
+      renderGraph();
+    }
+    
+  });
+});
+
+// Shop
+document.querySelectorAll('.shop-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentShopCategory = tab.dataset.category;
+    renderShop();
+  });
+});
+
+function renderShop() {
+  const container = document.getElementById('shopItems');
+  container.innerHTML = '';
+  
+  // Calculate discounts
+  const itemDiscount = state.streak >= 30 ? 0.05 : 0;
+  const bgDiscount = state.streak >= 50 ? 0.40 : 0;
+  
+  // Remove old banner
+  const existingBanner = document.getElementById('streakDiscountBanner');
+  if (existingBanner) existingBanner.remove();
+  
+  // Show streak discount banner
+  if ((state.streak >= 30 && currentShopCategory === 'items') || 
+      (state.streak >= 50 && currentShopCategory === 'backgrounds') ||
+      (state.streak >= 20 && state.streak < 30 && currentShopCategory === 'items') ||
+      (state.streak >= 40 && state.streak < 50 && currentShopCategory === 'backgrounds') ||
+      (state.streak < 20)) {
+    
+    const banner = document.createElement('div');
+    banner.id = 'streakDiscountBanner';
+    banner.style.cssText = 'background: linear-gradient(135deg, rgba(255,184,77,0.3), rgba(107,207,127,0.3)); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; font-weight: 600; color: #2D3142; text-align: center; border: 1px solid rgba(255,184,77,0.4);';
+    
+    if (state.streak >= 50 && currentShopCategory === 'backgrounds') {
+      banner.textContent = `🔥 ${state.streak} day streak = 40% OFF backgrounds!`;
+    } else if (state.streak >= 30 && currentShopCategory === 'items') {
+      banner.textContent = `🔥 ${state.streak} day streak = 5% OFF items!`;
+    } else if (state.streak >= 20 && state.streak < 30 && currentShopCategory === 'items') {
+      banner.textContent = `⚡ ${30 - state.streak} more days = 5% item discount!`;
+    } else if (state.streak >= 40 && state.streak < 50 && currentShopCategory === 'backgrounds') {
+      banner.textContent = `⚡ ${50 - state.streak} more days = 40% background discount!`;
+    } else if (state.streak < 20 && (currentShopCategory === 'items' || currentShopCategory === 'backgrounds')) {
+      banner.textContent = `💡 Build streaks for shop discounts!`;
+      banner.style.opacity = '0.6';
+    }
+    
+    container.parentNode.insertBefore(banner, container);
+  }
+  
+  if (currentShopCategory === 'items') {
+    // === CARROT ===
+    const carrotBasePrice = 10;
+    const carrotPrice = Math.floor(carrotBasePrice * (1 - itemDiscount));
+    const canAffordCarrot = state.coins >= carrotPrice;
+    
+    const carrotItem = document.createElement('div');
+    carrotItem.className = 'shop-item';
+    carrotItem.innerHTML = `
+      <div class="shop-item-icon">🥕</div>
+      <div class="shop-item-name">Carrot</div>
+      <div class="shop-item-price">${itemDiscount > 0 ? `<span style="text-decoration:line-through;opacity:0.5;font-size:10px">${carrotBasePrice}🪙</span> ` : ''}${canAffordCarrot ? carrotPrice + ' 🪙' : carrotPrice + ' 🪙 (Need ' + (carrotPrice - state.coins) + ')'}</div>
+    `;
+    if (!canAffordCarrot) {
+      carrotItem.style.opacity = '0.5';
+      carrotItem.style.cursor = 'not-allowed';
+    }
+    carrotItem.addEventListener('click', () => {
+      if (canAffordCarrot && confirm(`Buy 1 carrot for ${carrotPrice} coins?`)) {
+        state.coins -= carrotPrice;
+        state.carrots++;
+        updateDisplay();
+        renderShop();
+      } else if (!canAffordCarrot) {
+        alert('❌ Not enough coins!');
+      }
+    });
+    container.appendChild(carrotItem);
+    
+    // === CARROT BUNDLE ===
+    const bundleBasePrice = 25;
+    const bundlePrice = Math.floor(bundleBasePrice * (1 - itemDiscount));
+    const canAffordBundle = state.coins >= bundlePrice;
+    
+    const carrotBundle = document.createElement('div');
+    carrotBundle.className = 'shop-item';
+    carrotBundle.innerHTML = `
+      <div class="shop-item-icon">🥕🥕🥕</div>
+      <div class="shop-item-name">Carrot Bundle</div>
+      <div class="shop-item-price">${itemDiscount > 0 ? `<span style="text-decoration:line-through;opacity:0.5;font-size:10px">${bundleBasePrice}🪙</span> ` : ''}${canAffordBundle ? bundlePrice + ' 🪙' : bundlePrice + ' 🪙 (Need ' + (bundlePrice - state.coins) + ')'}</div>
+    `;
+    if (!canAffordBundle) {
+      carrotBundle.style.opacity = '0.5';
+      carrotBundle.style.cursor = 'not-allowed';
+    }
+    carrotBundle.addEventListener('click', () => {
+      if (canAffordBundle && confirm(`Buy 3 carrots for ${bundlePrice} coins?`)) {
+        state.coins -= bundlePrice;
+        state.carrots += 3;
+        updateDisplay();
+        renderShop();
+      } else if (!canAffordBundle) {
+        alert('❌ Not enough coins!');
+      }
+    });
+    container.appendChild(carrotBundle);
+
+    // === STREAK FREEZER ===
+    const freezerBasePrice = 60;
+    const freezerPrice = Math.floor(freezerBasePrice * (1 - itemDiscount));
+    const canAffordFreezer = state.coins >= freezerPrice;
+    const freezerActive = state.streakFreezeActive;
+
+    const streakFreezer = document.createElement('div');
+    streakFreezer.className = 'shop-item';
+    streakFreezer.innerHTML = `
+      <div class="shop-item-icon">❄️</div>
+      <div class="shop-item-name">Streak Freezer</div>
+      <div class="shop-item-price">${freezerActive ? 'Active!' : (itemDiscount > 0 ? `<span style="text-decoration:line-through;opacity:0.5;font-size:10px">${freezerBasePrice}🪙</span> ` : '') + (canAffordFreezer ? freezerPrice + ' 🪙' : freezerPrice + ' 🪙 (Need ' + (freezerPrice - state.coins) + ')')}</div>
+    `;
+    if (freezerActive) {
+      streakFreezer.classList.add('equipped');
+      streakFreezer.style.cursor = 'default';
+    } else if (!canAffordFreezer) {
+      streakFreezer.style.opacity = '0.5';
+      streakFreezer.style.cursor = 'not-allowed';
+    }
+    streakFreezer.addEventListener('click', () => {
+      if (freezerActive) {
+        alert('❄️ Streak Freezer is already active! It will protect your streak for 1 missed day.');
+      } else if (canAffordFreezer && confirm(`Buy Streak Freezer for ${freezerPrice} coins?`)) {
+        state.coins -= freezerPrice;
+        state.streakFreezeActive = true;
+        document.getElementById('freezeIndicator').textContent = '❄️';
+        updateDisplay();
+        renderShop();
+        alert('❄️ Streak Freezer activated!');
+      } else if (!canAffordFreezer) {
+        alert('❌ Not enough coins!');
+      }
+    });
+    container.appendChild(streakFreezer);
+
+    // === STUDY BOOK ===
+    const bookBasePrice = 25;
+    const bookPrice = Math.floor(bookBasePrice * (1 - itemDiscount));
+    const canAffordBook = state.coins >= bookPrice;
+    const bookActive = state.hasBook;
+    
+    const studyBook = document.createElement('div');
+    studyBook.className = 'shop-item';
+    if (bookActive) studyBook.classList.add('equipped');
+    studyBook.innerHTML = `
+      <div class="shop-item-icon">📚</div>
+      <div class="shop-item-name">Study Book</div>
+      <div class="shop-item-price">${bookActive ? 'Active!' : (itemDiscount > 0 ? `<span style="text-decoration:line-through;opacity:0.5;font-size:10px">${bookBasePrice}🪙</span> ` : '') + (canAffordBook ? bookPrice + ' 🪙' : bookPrice + ' 🪙 (Need ' + (bookPrice - state.coins) + ')')}</div>
+    `;
+    if (!canAffordBook && !bookActive) {
+      studyBook.style.opacity = '0.5';
+      studyBook.style.cursor = 'not-allowed';
+    }
+    if (bookActive) studyBook.style.cursor = 'default';
+    studyBook.addEventListener('click', () => {
+      if (bookActive) {
+        alert('📚 Study Book is active! Use it in your next focus session for 1.5x coins!');
+      } else if (canAffordBook && confirm(`Buy Study Book for ${bookPrice} coins?`)) {
+        state.coins -= bookPrice;
+        state.hasBook = true;
+        updateDisplay();
+        renderShop();
+        alert('📚 Study Book purchased! Start a focus session to use it!');
+      } else if (!canAffordBook) {
+        alert('❌ Not enough coins!');
+      }
+    });
+    container.appendChild(studyBook);
+    
+  } else if (currentShopCategory === 'cosmetics') {
+    cosmetics.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'shop-item';
+      const canAfford = state.coins >= item.price;
+      const owned = state.ownedCosmetics.includes(item.id);
+      
+      if (owned) el.classList.add('owned');
+      if (state.equippedCosmetic === item.id) el.classList.add('equipped');
+      
+      let priceText;
+      if (owned) {
+        priceText = state.equippedCosmetic === item.id ? 'Equipped' : 'Equip';
+      } else if (canAfford) {
+        priceText = item.price + ' 🪙';
+      } else {
+        priceText = item.price + ' 🪙 (Need ' + (item.price - state.coins) + ')';
+      }
+      
+      el.innerHTML = `
+        <div class="shop-item-icon">${item.icon}</div>
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-price">${priceText}</div>
+      `;
+      
+      if (!owned && !canAfford) {
+        el.style.opacity = '0.5';
+        el.style.cursor = 'not-allowed';
+      }
+      
+      el.addEventListener('click', () => {
+        if (owned) {
+          state.equippedCosmetic = state.equippedCosmetic === item.id ? null : item.id;
+          renderCosmetic();
+          renderShop();
+        } else if (canAfford) {
+          state.coins -= item.price;
+          state.ownedCosmetics.push(item.id);
+          checkAchievements();
+          updateDisplay();
+          renderShop();
+        }
+      });
+      
+      container.appendChild(el);
+    });
+    
+  } else if (currentShopCategory === 'emotes') {
+    emotes.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'shop-item';
+      const canAfford = state.coins >= item.price;
+      const owned = state.ownedEmotes.includes(item.id);
+      
+      if (owned) el.classList.add('owned');
+      if (state.equippedEmote === item.id) el.classList.add('equipped');
+      
+      let priceText;
+      if (owned) {
+        priceText = state.equippedEmote === item.id ? 'Equipped' : 'Equip';
+      } else if (canAfford) {
+        priceText = item.price + ' 🪙';
+      } else {
+        priceText = item.price + ' 🪙 (Need ' + (item.price - state.coins) + ')';
+      }
+      
+      el.innerHTML = `
+        <div class="shop-item-icon">${item.icon}</div>
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-price">${priceText}</div>
+      `;
+      
+      if (!owned && !canAfford) {
+        el.style.opacity = '0.5';
+        el.style.cursor = 'not-allowed';
+      }
+      
+      el.addEventListener('click', () => {
+        if (owned) {
+          state.equippedEmote = state.equippedEmote === item.id ? null : item.id;
+          renderEmote();
+          renderShop();
+        } else if (canAfford) {
+          state.coins -= item.price;
+          state.ownedEmotes.push(item.id);
+          checkAchievements();
+          updateDisplay();
+          renderShop();
+        }
+      });
+      
+      container.appendChild(el);
+    });
+    
+  } else if (currentShopCategory === 'backgrounds') {
+    backgrounds.forEach(bg => {
+      const el = document.createElement('div');
+      el.className = 'bg-item';
+      el.style.background = bg.gradient;
+      el.style.backgroundSize = '200% 200%';
+      
+      const discountedPrice = Math.floor(bg.price * (1 - bgDiscount));
+      const canAfford = state.coins >= discountedPrice;
+      const owned = state.ownedBackgrounds.includes(bg.id);
+      
+      if (owned) el.classList.add('owned');
+      if (state.activeBackground === bg.id) el.classList.add('active');
+      
+      const name = document.createElement('div');
+      name.className = 'bg-item-name';
+      name.textContent = bg.name;
+      el.appendChild(name);
+      
+      if (!owned && bg.price > 0) {
+        const price = document.createElement('div');
+        price.className = 'bg-price';
+        if (bgDiscount > 0) {
+          price.innerHTML = `<span style="text-decoration:line-through;opacity:0.6">${bg.price}🪙</span> ${discountedPrice}🪙`;
+          price.style.fontSize = '9px';
+        } else if (canAfford) {
+          price.textContent = `${bg.price}🪙`;
+        } else {
+          price.textContent = `${bg.price}🪙 (${discountedPrice - state.coins})`;
+          price.style.fontSize = '9px';
+        }
+        el.appendChild(price);
+        
+        if (!canAfford) {
+          el.style.opacity = '0.5';
+          el.style.cursor = 'not-allowed';
+        }
+      }
+      
+      el.addEventListener('click', () => {
+        if (owned) {
+          setBackground(bg.id);
+        } else if (canAfford) {
+          state.coins -= discountedPrice;
+          state.ownedBackgrounds.push(bg.id);
+          setBackground(bg.id);
+          updateDisplay();
+          renderShop();
+        }
+      });
+      
+      container.appendChild(el);
+    });
+  }
+}
+// Calendar navigation
+document.getElementById('prevMonth').addEventListener('click', () => {
+  state.currentCalendarMonth--;
+  if (state.currentCalendarMonth < 0) {
+    state.currentCalendarMonth = 11;
+    state.currentCalendarYear--;
+  }
+  renderCalendar();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+  state.currentCalendarMonth++;
+  if (state.currentCalendarMonth > 11) {
+    state.currentCalendarMonth = 0;
+    state.currentCalendarYear++;
+  }
+  renderCalendar();
+});
+
+document.getElementById('gcalBtn').addEventListener('click', () => {
+  // Try to open app first, fallback to web
+  window.location.href = 'googlecalendar://';
+  
+  // Fallback to web after 500ms if app doesn't open
+  setTimeout(() => {
+    window.open('https://calendar.google.com', '_blank');
+  }, 500);
+});
+
+document.getElementById('graphRange')?.addEventListener('change', () => {
+  renderGraph();
+});
+document.getElementById('refreshGraph')?.addEventListener('click', () => {
+  renderGraph();
+});
+
+// Menu
+const menuOverlay = document.getElementById('menuOverlay');
+const menuDrawer = document.getElementById('menuDrawer');
+const menuClose = document.getElementById('menuClose');
+
+document.querySelectorAll('.menu-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    menuOverlay.classList.add('active');
+    menuDrawer.classList.add('active');
+  });
+});
+
+menuClose.addEventListener('click', () => {
+  menuOverlay.classList.remove('active');
+  menuDrawer.classList.remove('active');
+});
+
+menuOverlay.addEventListener('click', (e) => {
+  if (e.target === menuOverlay) {
+    menuOverlay.classList.remove('active');
+    menuDrawer.classList.remove('active');
+  }
+});
+
+// Settings
+document.getElementById('soundToggle').addEventListener('click', function() {
+  this.classList.toggle('active');
+  state.soundEnabled = this.classList.contains('active');
+});
+
+document.getElementById('emojiToggle').addEventListener('click', function() {
+  this.classList.toggle('active');
+  state.showFloatingEmojis = this.classList.contains('active');
+});
+
+document.getElementById('autoBreakToggle').addEventListener('click', function() {
+  this.classList.toggle('active');
+  state.autoStartBreaks = this.classList.contains('active');
+});
+
+document.getElementById('opacitySetting').addEventListener('click', () => {
+  const currentValue = Math.round(state.backgroundOpacity * 100);
+  document.getElementById('opacitySlider').value = currentValue;
+  document.getElementById('opacityPreview').textContent = currentValue;
+  document.getElementById('opacityModal').classList.add('active');
+});
+
+document.getElementById('opacitySlider').addEventListener('input', (e) => {
+  document.getElementById('opacityPreview').textContent = e.target.value;
+});
+
+document.getElementById('cancelOpacityBtn').addEventListener('click', () => {
+  document.getElementById('opacityModal').classList.remove('active');
+});
+
+document.getElementById('saveBlurBtn').addEventListener('click', () => {
+  state.blurAmount = parseInt(document.getElementById('blurSlider').value);
+  applyBlur();
+  document.getElementById('blurModal').classList.remove('active');
+});
+document.getElementById('saveOpacityBtn').addEventListener('click', () => {
+  state.backgroundOpacity = parseInt(document.getElementById('opacitySlider').value) / 100;
+  applyOpacity();
+  document.getElementById('opacityModal').classList.remove('active');
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('This will reset ALL data!!! ONLY do this when you know what yor doing')) {
+    if (state.happyDecayInterval) clearInterval(state.happyDecayInterval);
+    if (state.timerInterval) clearInterval(state.timerInterval);
+    if (state.emojiInterval) clearInterval(state.emojiInterval);
+    if (state.rebornInterval) clearInterval(state.rebornInterval);
+    if (state.pauseInterval) clearInterval(state.pauseInterval);
+    state.coins = 0;
+    state.carrots = 0;
+    state.happiness = 100;
+    state.longestSession = 0;
+    state.longestBreak = 0;
+    state.highestCoins = 0;
+    state.carrotsFed = 0;
+    state.characterWidth = 140;
+    state.studyMinutes = {};
+    state.breakMinutes = {};
+    state.sessionColors = {};
+    state.colorSubjects = {};
+    state.todos = [];
+    state.ownedCosmetics = [];
+    state.ownedBackgrounds = ['default'];
+    state.ownedEmotes = [];
+    state.equippedCosmetic = null;
+    state.equippedEmote = null;
+    state.activeBackground = 'default';
+    state.isDead = false;
+    state.isReviving = false;
+    state.unlockedAchievements = [];
+    state.streak = 0;
+    state.lastStreakDate = null;
+    state.streakFreezeActive = false;
+    state.hasBook = false;
+    state.reborns = 0;
+    state.revivals = 0;
+    state.studyingDisabledUntil = null;
+    setBackground('default');
+    renderCosmetic();
+    updateDisplay();
+    renderTodos();
+    renderShop();
+    renderGraph();
+    startHappyDecay();
+    saveState();
+  }
+});
+
+// To-Do List
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  list.innerHTML = '';
+  
+  const sortBy = state.todoSort || 'deadline';
+  
+  // Separate completed and active tasks
+  const activeTasks = state.todos.filter(t => !t.completed);
+  const completedTasks = state.todos.filter(t => t.completed);
+  
+  // Sort active tasks
+  if (sortBy === 'deadline') {
+    activeTasks.sort((a, b) => {
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return new Date(a.deadline) - new Date(b.deadline);
+    });
+  } else if (sortBy === 'alphabetical') {
+    activeTasks.sort((a, b) => a.text.localeCompare(b.text));
+  }
+  // 'created' keeps original order
+  
+  // Render active tasks first, then completed
+  [...activeTasks, ...completedTasks].forEach((todo) => {
+    const realIndex = state.todos.indexOf(todo);
+    const item = document.createElement('div');
+    item.className = 'todo-item' + (todo.completed ? ' completed' : '');
+    
+    const deadlineText = todo.deadline ? `Due: ${todo.deadline}` : '';
+    
+    item.innerHTML = `
+      <div class="todo-checkbox"></div>
+      <div class="todo-info">
+        <div class="todo-text">${todo.text}</div>
+        ${deadlineText ? `<div class="todo-deadline">${deadlineText}</div>` : ''}
+      </div>
+      <button class="todo-delete">×</button>
+    `;
+    
+    item.querySelector('.todo-checkbox').addEventListener('click', () => {
+      state.todos[realIndex].completed = !state.todos[realIndex].completed;
+      renderTodos();
+      renderCalendar();
+      saveState();
+    });
+    
+    item.querySelector('.todo-info').addEventListener('click', () => {
+      document.getElementById('viewTodoTitle').textContent = todo.text;
+      document.getElementById('viewTodoDescription').textContent = todo.description || 'No description';
+      document.getElementById('viewTodoDeadline').textContent = todo.deadline ? `Due: ${todo.deadline}` : 'No deadline';
+      document.getElementById('todoViewModal').classList.add('active');
+    });
+    
+    item.querySelector('.todo-delete').addEventListener('click', () => {
+      if (confirm('Delete this task?')) {
+        state.todos.splice(realIndex, 1);
+        renderTodos();
+        renderCalendar();
+        saveState();
+      }
+    });
+    
+    list.appendChild(item);
+  });
+}
+
+// ADD listener after DOM loads
+document.addEventListener('DOMContentLoaded', () => {
+  const sortSelect = document.getElementById('todoSort');
+  if (sortSelect) {
+    sortSelect.value = state.todoSort || 'deadline';
+    sortSelect.addEventListener('change', (e) => {
+      state.todoSort = e.target.value;
+      renderTodos();
+      saveState();
+    });
+  }
+});
+
+document.getElementById('addTodoBtn').addEventListener('click', () => {
+  if (state.todos.length >= 20) {
+    alert('Maximum 20 tasks allowed!');
+    return;
+  }
+  document.getElementById('todoModal').classList.add('active');
+  document.getElementById('todoInput').value = '';
+  document.getElementById('todoDescription').value = '';
+  document.getElementById('todoDeadline').value = '';
+  setTimeout(() => document.getElementById('todoInput').focus(), 100);
+});
+
+document.getElementById('cancelTodoBtn').addEventListener('click', () => {
+  document.getElementById('todoModal').classList.remove('active');
+});
+
+document.getElementById('saveTodoBtn').addEventListener('click', () => {
+  const text = document.getElementById('todoInput').value.trim();
+  const description = document.getElementById('todoDescription').value.trim();
+  const deadline = document.getElementById('todoDeadline').value;
+  if (text) {
+    state.todos.push({ text, description, deadline: deadline || null, completed: false });
+    renderTodos();
+    renderCalendar();
+    document.getElementById('todoModal').classList.remove('active');
+  }
+});
+
+document.getElementById('closeTodoViewBtn').addEventListener('click', () => {
+  document.getElementById('todoViewModal').classList.remove('active');
+});
+
+// Admin access
+document.querySelectorAll('.admin-key').forEach(key => {
+  key.addEventListener('click', () => {
+    document.getElementById('adminModal').classList.add('active');
+    document.getElementById('adminPassword').value = '';
+    setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+  });
+});
+
+document.getElementById('cancelAdminBtn').addEventListener('click', () => {
+  document.getElementById('adminModal').classList.remove('active');
+});
+
+document.getElementById('confirmAdminBtn').addEventListener('click', () => {
+  const password = document.getElementById('adminPassword').value;
+  if (password === _k) {
+    document.getElementById('adminModal').classList.remove('active');
+    // Populate all fields
+    document.getElementById('coinsInput').value = state.coins;
+    document.getElementById('carrotsInput').value = state.carrots;
+    document.getElementById('happinessInput').value = Math.floor(state.happiness);
+    document.getElementById('charWidthInput').value = state.characterWidth;
+    document.getElementById('streakAdminInput').value = state.streak;
+    document.getElementById('rebornsInput').value = state.reborns;
+    document.getElementById('revivalsInput').value = state.revivals;
+    document.getElementById('carrotsFedAdminInput').value = state.carrotsFed;
+    document.getElementById('longestSessAdminInput').value = state.longestSession;
+    document.getElementById('todayStudyAdminInput').value = state.studyMinutes[getTodayDateString()] || 0;
+    // Reset to Resources tab
+    document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('adminTab-resources').style.display = 'block';
+    document.querySelectorAll('.admin-tab-btn').forEach((b, i) => {
+      b.style.background = i === 0 ? 'linear-gradient(135deg,#6BCF7F,#5ABF6F)' : 'rgba(0,0,0,0.08)';
+      b.style.color = i === 0 ? 'white' : (i === 3 ? '#c0392b' : '');
+    });
+    document.getElementById('editCurrencyModal').classList.add('active');
+  } else {
+    alert('Please do not mess with things you dont know.');
+  }
+});
+
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+  document.getElementById('editCurrencyModal').classList.remove('active');
+});
+
+// === ADMIN TAB SWITCHING ===
+document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
+    document.getElementById(`adminTab-${tab}`).style.display = 'block';
+    document.querySelectorAll('.admin-tab-btn').forEach(b => {
+      b.style.background = 'rgba(0,0,0,0.08)';
+      b.style.color = b.dataset.tab === 'danger' ? '#c0392b' : '';
+    });
+    btn.style.background = tab === 'danger' ? 'rgba(255,107,107,0.4)' : 'linear-gradient(135deg,#6BCF7F,#5ABF6F)';
+    btn.style.color = tab === 'danger' ? '#c0392b' : 'white';
+  });
+});
+
+// === RESOURCES ===
+document.getElementById('saveResourcesBtn').addEventListener('click', () => {
+  const newHappiness = Math.max(0, Math.min(100, parseInt(document.getElementById('happinessInput').value) || 0));
+  state.coins = parseInt(document.getElementById('coinsInput').value) || 0;
+  state.carrots = parseInt(document.getElementById('carrotsInput').value) || 0;
+  state.characterWidth = Math.max(140, Math.min(420, parseInt(document.getElementById('charWidthInput').value) || 140));
+  if (newHappiness > 0 && state.isDead) { state.isDead = false; state.isReviving = false; }
+  else if (newHappiness === 0 && !state.isDead) { handleDeath(); }
+  state.happiness = newHappiness;
+  updateDisplay();
+  saveState();
+  alert('✅ Resources saved!');
+});
+
+document.getElementById('maxHappinessBtn').addEventListener('click', () => {
+  if (state.isDead) { state.isDead = false; state.isReviving = false; }
+  state.happiness = 100;
+  document.getElementById('happinessInput').value = 100;
+  updateDisplay();
+  saveState();
+  alert('❤️ Happiness maxed to 100%!');
+});
+
+document.getElementById('addCoins100Btn').addEventListener('click', () => {
+  state.coins += 100;
+  document.getElementById('coinsInput').value = state.coins;
+  updateDisplay();
+  saveState();
+});
+
+document.getElementById('addCarrots5Btn').addEventListener('click', () => {
+  state.carrots += 5;
+  document.getElementById('carrotsInput').value = state.carrots;
+  updateDisplay();
+  saveState();
+});
+
+// === PROGRESS ===
+document.getElementById('saveProgressBtn').addEventListener('click', () => {
+  state.streak = parseInt(document.getElementById('streakAdminInput').value) || 0;
+  state.reborns = parseInt(document.getElementById('rebornsInput').value) || 0;
+  state.revivals = parseInt(document.getElementById('revivalsInput').value) || 0;
+  state.carrotsFed = parseInt(document.getElementById('carrotsFedAdminInput').value) || 0;
+  state.longestSession = parseInt(document.getElementById('longestSessAdminInput').value) || 0;
+  const todayStudy = parseInt(document.getElementById('todayStudyAdminInput').value) || 0;
+  state.studyMinutes[getTodayDateString()] = todayStudy;
+  document.getElementById('streakCount').textContent = state.streak;
+  updateDisplay();
+  saveState();
+  alert('✅ Progress saved!');
+});
+
+document.getElementById('fixStreakDateBtn').addEventListener('click', () => {
+  state.lastStreakDate = getTodayDateString();
+  saveState();
+  alert(`📅 Streak last-date set to today (${getTodayDateString()}). Streak is now ${state.streak} days.`);
+});
+
+document.getElementById('toggleFreezeAdminBtn').addEventListener('click', () => {
+  state.streakFreezeActive = !state.streakFreezeActive;
+  const indicator = document.getElementById('freezeIndicator');
+  if (indicator) indicator.textContent = state.streakFreezeActive ? '❄️' : '';
+  saveState();
+  alert(`❄️ Streak Freeze is now ${state.streakFreezeActive ? 'ACTIVE' : 'OFF'}`);
+});
+
+// === UNLOCKS ===
+document.getElementById('unlockAllAchievementsBtn').addEventListener('click', () => {
+  achievements.forEach(ach => {
+    if (!state.unlockedAchievements.includes(ach.id)) state.unlockedAchievements.push(ach.id);
+  });
+  saveState();
+  alert(`🏆 All ${achievements.length} achievements unlocked!`);
+});
+
+document.getElementById('unlockAllCosmeticsBtn').addEventListener('click', () => {
+  cosmetics.forEach(c => { if (!state.ownedCosmetics.includes(c.id)) state.ownedCosmetics.push(c.id); });
+  saveState();
+  renderShop();
+  alert('👑 All cosmetics unlocked!');
+});
+
+document.getElementById('unlockAllBgsBtn').addEventListener('click', () => {
+  backgrounds.forEach(bg => { if (!state.ownedBackgrounds.includes(bg.id)) state.ownedBackgrounds.push(bg.id); });
+  saveState();
+  renderShop();
+  alert('🎨 All backgrounds unlocked!');
+});
+
+document.getElementById('unlockAllEmotesBtn').addEventListener('click', () => {
+  emotes.forEach(e => { if (!state.ownedEmotes.includes(e.id)) state.ownedEmotes.push(e.id); });
+  saveState();
+  renderShop();
+  alert('😄 All emotes unlocked!');
+});
+
+document.getElementById('grantBookAdminBtn').addEventListener('click', () => {
+  state.hasBook = true;
+  saveState();
+  renderBook();
+  alert('📚 Study Book granted! Active for your next focus session.');
+});
+
+document.getElementById('grantFreezerAdminBtn').addEventListener('click', () => {
+  state.streakFreezeActive = true;
+  const indicator = document.getElementById('freezeIndicator');
+  if (indicator) indicator.textContent = '❄️';
+  saveState();
+  alert('❄️ Streak Freezer is now active!');
+});
+
+// === DANGER ===
+document.getElementById('killBuddyAdminBtn').addEventListener('click', () => {
+  if (confirm('💀 Are you sure you want to kill your buddy?')) {
+    handleDeath();
+    saveState();
+  }
+});
+
+document.getElementById('reviveBuddyAdminBtn').addEventListener('click', () => {
+  state.isDead = false;
+  state.isReviving = false;
+  if (state.happiness <= 0) state.happiness = 50;
+  updateDisplay();
+  saveState();
+  alert('✨ Buddy instantly revived!');
+});
+
+document.getElementById('clearStudyDataBtn').addEventListener('click', () => {
+  if (confirm('🗑️ Wipe ALL study history, session colors and subjects? Cannot be undone!')) {
+    state.studyMinutes = {};
+    state.breakMinutes = {};
+    state.sessionColors = {};
+    state.colorSubjects = {};
+    renderGraph();
+    renderCalendar();
+    saveState();
+    alert('🗑️ Study history cleared!');
+  }
+});
+
+document.getElementById('clearTodosAdminBtn').addEventListener('click', () => {
+  if (confirm('🗑️ Delete ALL todos permanently?')) {
+    state.todos = [];
+    renderTodos();
+    renderCalendar();
+    saveState();
+    alert('🗑️ All todos cleared!');
+  }
+});
+
+// Death modal
+document.getElementById('okDeathBtn').addEventListener('click', () => {
+  document.getElementById('deathModal').classList.remove('active');
+});
+
+
+// Menu items
+document.getElementById('aboutBtn').addEventListener('click', () => {
+  alert('Study Buddy v4.0\n\nA focus timer app to help you study WAYY better!!\n\nBuy carrots from shop and **drag** them to feed your buddy!\n\nMade by EthanGenius!!\nStopping mid-session costs 5-15% happiness!');
+  menuOverlay.classList.remove('active');
+  menuDrawer.classList.remove('active');
+});
+
+document.getElementById('historyBtn').addEventListener('click', () => {
+  alert('History:\n\nView your study history in the Stats page calendar!\n\nRed dots show tasks with deadlines - click them to view details!');
+  menuOverlay.classList.remove('active');
+  menuDrawer.classList.remove('active');
+});
+
+document.getElementById('helpBtn').addEventListener('click', () => {
+  alert('Help:\n\n1. Set a timer and start focusing\n2. Complete sessions to earn coins (2 coins per 5 min)\n3. Buy carrots from shop (10 coins each)\n4. DRAG carrots to your buddy to feed\n5. Buy cosmetics & backgrounds!\n\nWarning: Happiness decreases 5% per hour!\nAt 0%, your buddy dies and needs 3 carrots to revive!\n\nDuring focus: Floating study emojis appear!');
+  menuOverlay.classList.remove('active');
+  menuDrawer.classList.remove('active');
+});
+
+// === ACHIEVEMENTS ===
+const achievements = [
+  { id: 'first_session', name: 'Getting Started', desc: 'Complete your first focus session', icon: '🎯', check: () => state.longestSession > 0 },
+  { id: 'ten_sessions', name: 'Dedicated', desc: 'Complete 10 focus sessions', icon: '📚', check: () => Object.keys(state.studyMinutes).length >= 10 },
+  { id: 'rich', name: 'Wealthy', desc: 'Earn 100 coins', icon: '💰', check: () => state.highestCoins >= 100 },
+  { id: 'feeder', name: 'Caretaker', desc: 'Feed 20 carrots', icon: '🥕', check: () => state.carrotsFed >= 20 },
+  { id: 'marathon', name: 'Marathon', desc: 'Complete a 60+ minute session', icon: '⏱️', check: () => state.longestSession >= 60 },
+  { id: 'fashionista', name: 'Fashionista', desc: 'Buy all 3 cosmetics', icon: '👑', check: () => state.ownedCosmetics.length >= 3 },
+  { id: 'survivor', name: 'Survivor', desc: 'Revive your buddy', icon: '💀', check: () => state.revivals >= 1 },
+  { id: 'collector', name: 'Collector', desc: 'Unlock all backgrounds', icon: '🎨', check: () => state.ownedBackgrounds.length >= backgrounds.length },
+  { id: 'first_reborn', name: 'Reborn', desc: 'Complete your first reborn', icon: '🏋️', check: () => state.reborns >= 1 },
+  { id: 'reborn_master', name: 'Reborn Master', desc: 'Complete 5 reborns', icon: '💪', check: () => state.reborns >= 5 },
+  { id: 'night_owl', name: 'Night Owl', desc: 'Study between 12am-4am', icon: '🦉', check: () => {
+    const hour = new Date().getHours();
+    return state.longestSession > 0 && hour >= 0 && hour < 4;
+  }},
+  { id: 'early_bird', name: 'Early Bird', desc: 'Study between 4am-6am', icon: '🌅', check: () => {
+    const hour = new Date().getHours();
+    return state.longestSession > 0 && hour >= 4 && hour < 6;
+  }},
+  { id: 'grinder', name: 'Grinder', desc: 'Study after 10pm', icon: '🌙', check: () => {
+    const hour = new Date().getHours();
+    return state.longestSession > 0 && hour >= 22;
+  }},
+  { id: 'streak_warrior', name: 'Streak Warrior', desc: 'Reach a 7 day streak', icon: '🔥', check: () => state.streak >= 7 },
+  { id: 'streak_legend', name: 'Streak Legend', desc: 'Reach a 15 day streak', icon: '⚡', check: () => state.streak >= 15 },
+  { id: 'super_rich', name: 'Super Rich', desc: 'Earn 500 coins', icon: '💎', check: () => state.highestCoins >= 500 },
+  { id: 'task_master', name: 'Task Master', desc: 'Complete 20 tasks', icon: '✅', check: () => state.todos.filter(t => t.completed).length >= 20 }
+];
+
+// === SAVE/LOAD SYSTEM ===
+const STORAGE_KEY = 'studyBuddyState';
+
+function saveState() {
+  const data = {
+    coins: state.coins,
+    breakMinutes: state.breakMinutes,
+    sessionColors: state.sessionColors,
+    colorSubjects: state.colorSubjects,
+    ownedEmotes: state.ownedEmotes,
+    equippedEmote: state.equippedEmote,
+    carrots: state.carrots,
+    happiness: state.happiness,
+    soundEnabled: state.soundEnabled,
+    autoStartBreaks: state.autoStartBreaks,
+    backgroundOpacity: state.backgroundOpacity,
+    characterWidth: state.characterWidth,
+    longestSession: state.longestSession,
+    longestBreak: state.longestBreak,
+    highestCoins: state.highestCoins,
+    carrotsFed: state.carrotsFed,
+    studyMinutes: state.studyMinutes,
+    todos: state.todos,
+    todoSort: state.todoSort,
+    durations: state.durations,
+    stopwatchTime: state.stopwatchTime,
+    ownedCosmetics: state.ownedCosmetics,
+    ownedBackgrounds: state.ownedBackgrounds,
+    equippedCosmetic: state.equippedCosmetic,
+    activeBackground: state.activeBackground,
+    isDead: state.isDead,
+    showFloatingEmojis: state.showFloatingEmojis,
+    lastHappyDecay: state.lastHappyDecay,
+    streak: state.streak,
+    lastStreakDate: state.lastStreakDate,
+    streakFreezeActive: state.streakFreezeActive,
+    hasBook: state.hasBook,
+    reborns: state.reborns,
+    revivals: state.revivals,
+    unlockedAchievements: state.unlockedAchievements,
+    currentCalendarMonth: state.currentCalendarMonth,
+    currentCalendarYear: state.currentCalendarYear,
+    studyingDisabledUntil: state.studyingDisabledUntil,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      Object.assign(state, data);
+      state.timeLeft = state.durations[state.mode] * 60;
+      
+      // Clear expired study cooldown
+      if (state.studyingDisabledUntil && Date.now() >= state.studyingDisabledUntil) {
+        state.studyingDisabledUntil = null;
+      }
+      
+      console.log('✅ Loaded');
+    } catch (e) {
+      console.error('Load failed:', e);
+    }
+  }
+}
+
+// === ACHIEVEMENTS LISTENERS ===
+document.getElementById('achievementsBtn').addEventListener('click', () => {
+  renderAchievements();
+  document.getElementById('achievementsModal').classList.add('active');
+});
+
+document.getElementById('closeAchievementsBtn').addEventListener('click', () => {
+  document.getElementById('achievementsModal').classList.remove('active');
+});
+
+// the streak stuff below lasting 2 blocks
+document.getElementById('streakDisplay').addEventListener('click', () => {
+  document.getElementById('streakModal').classList.add('active');
+});
+
+document.getElementById('closeStreakBtn').addEventListener('click', () => {
+  document.getElementById('streakModal').classList.remove('active');
+});
+
+// Pause modal resume button
+document.getElementById('resumePauseBtn').addEventListener('click', () => {
+  resumeTimer();
+});
+
+// === RAW STATS VIEWER ===
+document.getElementById('rawStatsBtnAdmin')?.addEventListener('click', () => {
+  menuOverlay.classList.remove('active');
+  menuDrawer.classList.remove('active');
+  
+  const statsContent = document.getElementById('rawStatsContent');
+  
+  // Format state object with nested objects expanded
+  const formatValue = (val) => {
+    if (val === null) return 'null';
+    if (val === undefined) return 'undefined';
+    if (typeof val === 'object') return JSON.stringify(val, null, 2);
+    if (typeof val === 'string') return `"${val}"`;
+    return String(val);
+  };
+  
+  let output = '=== STUDY BUDDY STATE DUMP ===\n';
+  output += `Generated: ${new Date().toLocaleString()}\n\n`;
+  
+  // Core Stats
+  output += '📊 CORE STATS:\n';
+  output += `├─ Coins: ${state.coins}\n`;
+  output += `├─ Carrots: ${state.carrots}\n`;
+  output += `├─ Happiness: ${state.happiness}%\n`;
+  output += `├─ Character Width: ${state.characterWidth}px\n`;
+  output += `├─ Is Dead: ${state.isDead}\n`;
+  output += `├─ Is Reviving: ${state.isReviving}\n`;
+  output += `├─ Is Reborning: ${state.isReborning}\n`;
+  output += `└─ Reborn Time Left: ${state.rebornTimeLeft}s\n\n`;
+  
+  // Progress
+  output += '🏆 PROGRESS:\n';
+  output += `├─ Reborns: ${state.reborns}\n`;
+  output += `├─ Revivals: ${state.revivals}\n`;
+  output += `├─ Carrots Fed: ${state.carrotsFed}\n`;
+  output += `├─ Longest Session: ${state.longestSession} min\n`;
+  output += `├─ Longest Break: ${state.longestBreak} min\n`;
+  output += `├─ Highest Coins: ${state.highestCoins}\n`;
+  output += `└─ Total Study Days: ${Object.keys(state.studyMinutes).length}\n\n`;
+  
+  // Streak
+  output += '🔥 STREAK:\n';
+  output += `├─ Current Streak: ${state.streak} days\n`;
+  output += `├─ Last Streak Date: ${state.lastStreakDate || 'Never'}\n`;
+  output += `└─ Freeze Active: ${state.streakFreezeActive}\n\n`;
+  
+  // Unlockables
+  output += '🎨 UNLOCKABLES:\n';
+  output += `├─ Owned Cosmetics: [${state.ownedCosmetics.join(', ') || 'None'}]\n`;
+  output += `├─ Equipped Cosmetic: ${state.equippedCosmetic || 'None'}\n`;
+  output += `├─ Owned Emotes: [${state.ownedEmotes.join(', ') || 'None'}]\n`;
+  output += `├─ Equipped Emote: ${state.equippedEmote || 'None'}\n`;
+  output += `├─ Owned Backgrounds: [${state.ownedBackgrounds.join(', ')}]\n`;
+  output += `├─ Active Background: ${state.activeBackground}\n`;
+  output += `└─ Has Study Book: ${state.hasBook}\n\n`;
+  
+  // Achievements
+  output += '🏅 ACHIEVEMENTS:\n';
+  output += `└─ Unlocked (${state.unlockedAchievements.length}/${achievements.length}): [${state.unlockedAchievements.join(', ') || 'None'}]\n\n`;
+  
+  // Timer State
+  output += '⏱️ TIMER STATE:\n';
+  output += `├─ Mode: ${state.mode}\n`;
+  output += `├─ Is Running: ${state.isRunning}\n`;
+  output += `├─ Is Paused: ${state.isPaused}\n`;
+  output += `├─ Time Left: ${state.timeLeft}s (${Math.floor(state.timeLeft / 60)}m ${state.timeLeft % 60}s)\n`;
+  output += `├─ Stopwatch Time: ${state.stopwatchTime}s\n`;
+  output += `├─ Pause Elapsed: ${state.pauseElapsed}s\n`;
+  output += `├─ Focus Duration: ${state.durations.focus} min\n`;
+  output += `├─ Long Break Duration: ${state.durations.long} min\n`;
+  output += `└─ Studying Disabled Until: ${state.studyingDisabledUntil ? new Date(state.studyingDisabledUntil).toLocaleTimeString() : 'Not disabled'}\n\n`;
+  
+  // Settings
+  output += '⚙️ SETTINGS:\n';
+  output += `├─ Sound Enabled: ${state.soundEnabled}\n`;
+  output += `├─ Auto Start Breaks: ${state.autoStartBreaks}\n`;
+  output += `├─ Show Floating Emojis: ${state.showFloatingEmojis}\n`;
+  output += `├─ Background Opacity: ${state.backgroundOpacity}\n`;
+  output += `└─ Last Happy Decay: ${new Date(state.lastHappyDecay).toLocaleString()}\n\n`;
+  
+  // Tasks
+  output += `✓ TASKS (${state.todos.length}/20):\n`;
+  if (state.todos.length === 0) {
+    output += `└─ No tasks\n\n`;
+  } else {
+    state.todos.forEach((todo, i) => {
+      output += `${i === state.todos.length - 1 ? '└─' : '├─'} [${todo.completed ? '✓' : ' '}] ${todo.text}\n`;
+      if (todo.deadline) output += `${i === state.todos.length - 1 ? '  ' : '│ '}   Due: ${todo.deadline}\n`;
+    });
+    output += '\n';
+  }
+  
+  // Study Minutes (last 7 days)
+  output += '📚 STUDY MINUTES (Last 7 Days):\n';
+  const last7Days = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const mins = state.studyMinutes[dateStr] || 0;
+    last7Days.push(`${dateStr}: ${mins}m`);
+  }
+  last7Days.forEach((day, i) => {
+    output += `${i === 6 ? '└─' : '├─'} ${day}\n`;
+  });
+  output += '\n';
+  
+  // Color Tags
+  output += '🎨 COLOR SUBJECTS:\n';
+  const subjects = Object.entries(state.colorSubjects);
+  if (subjects.length === 0) {
+    output += `└─ No subjects tagged\n\n`;
+  } else {
+    subjects.forEach(([hex, name], i) => {
+      output += `${i === subjects.length - 1 ? '└─' : '├─'} ${hex}: "${name}"\n`;
+    });
+    output += '\n';
+  }
+  
+  // Session Colors (last 10)
+  output += '📊 RECENT SESSIONS (Last 10):\n';
+  const sessions = Object.entries(state.sessionColors).slice(-10);
+  if (sessions.length === 0) {
+    output += `└─ No sessions\n\n`;
+  } else {
+    sessions.forEach(([key, data], i) => {
+      output += `${i === sessions.length - 1 ? '└─' : '├─'} ${key.split('-')[0]}: ${data.subject} (${data.duration}m)\n`;
+    });
+    output += '\n';
+  }
+  
+  // Calendar State
+  output += '📅 CALENDAR STATE:\n';
+  output += `├─ Current Month: ${state.currentCalendarMonth + 1}\n`;
+  output += `├─ Current Year: ${state.currentCalendarYear}\n`;
+  output += `└─ Todo Sort: ${state.todoSort}\n\n`;
+  
+  // Memory/Storage
+  output += '💾 STORAGE:\n';
+  const stateJSON = JSON.stringify(state);
+  const sizeKB = (new Blob([stateJSON]).size / 1024).toFixed(2);
+  output += `├─ State Size: ${sizeKB} KB\n`;
+  output += `├─ Study Days Tracked: ${Object.keys(state.studyMinutes).length}\n`;
+  output += `├─ Break Days Tracked: ${Object.keys(state.breakMinutes).length}\n`;
+  output += `└─ Session Colors Tracked: ${Object.keys(state.sessionColors).length}\n\n`;
+  
+  // Intervals (active)
+  output += '🔄 ACTIVE INTERVALS:\n';
+  output += `├─ Timer Interval: ${state.timerInterval ? 'Running' : 'Stopped'}\n`;
+  output += `├─ Happy Decay Interval: ${state.happyDecayInterval ? 'Running' : 'Stopped'}\n`;
+  output += `├─ Emoji Interval: ${state.emojiInterval ? 'Running' : 'Stopped'}\n`;
+  output += `├─ Pause Interval: ${state.pauseInterval ? 'Running' : 'Stopped'}\n`;
+  output += `└─ Reborn Interval: ${state.rebornInterval ? 'Running' : 'Stopped'}\n\n`;
+  
+  // Raw JSON dump
+  output += '═══════════════════════════════════════\n';
+  output += 'RAW JSON STATE:\n';
+  output += '═══════════════════════════════════════\n';
+  output += JSON.stringify(state, null, 2);
+  
+  statsContent.textContent = output;
+  document.getElementById('rawStatsModal').classList.add('active');
+});
+
+document.getElementById('closeRawStatsBtn')?.addEventListener('click', () => {
+  document.getElementById('rawStatsModal').classList.remove('active');
+  document.getElementById('editCurrencyModal').classList.add('active');
+});
+
+document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
+  const content = document.getElementById('rawStatsContent').textContent;
+  navigator.clipboard.writeText(content).then(() => {
+    const btn = document.getElementById('copyRawStatsBtn');
+    const originalText = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => {
+      btn.textContent = originalText;
+    }, 2000);
+  });
+});
+
+// === FEEDBACK SYSTEM ===
+(function() {
+  const COOLDOWN_KEY = 'studyBuddyFeedbackCooldown';
+  const COOLDOWN_MS = 48 * 60 * 60 * 1000;
+  let selectedType = 'suggestion';
+
+  function getRemainingCooldown() {
+    const last = parseInt(localStorage.getItem(COOLDOWN_KEY) || '0');
+    return Math.max(0, COOLDOWN_MS - (Date.now() - last));
+  }
+
+  function formatCooldown(ms) {
+    const h = Math.floor(ms / 3600000);
+    const m = Math.ceil((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  document.getElementById('openFeedbackBtn').addEventListener('click', () => {
+    const remaining = getRemainingCooldown();
+    const btn = document.getElementById('submitFeedbackBtn');
+    const textarea = document.getElementById('feedbackText');
+    const contact = document.getElementById('feedbackContact');
+    const status = document.getElementById('feedbackStatus');
+
+    textarea.value = '';
+    contact.value = '';
+    status.textContent = '';
+
+    if (remaining > 0) {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.textContent = `Cooldown — ${formatCooldown(remaining)} left`;
+      textarea.disabled = true;
+      textarea.style.opacity = '0.5';
+      contact.disabled = true;
+      contact.style.opacity = '0.5';
+      status.textContent = `You can submit again in ${formatCooldown(remaining)}.`;
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = 'Send Feedback';
+      textarea.disabled = false;
+      textarea.style.opacity = '1';
+      contact.disabled = false;
+      contact.style.opacity = '1';
+    }
+
+    document.getElementById('feedbackModal').classList.add('active');
+  });
+
+  document.getElementById('closeFeedbackModalBtn').addEventListener('click', () => {
+    document.getElementById('feedbackModal').classList.remove('active');
+  });
+
+  document.querySelectorAll('.feedback-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.feedback-type-btn').forEach(b => {
+        b.style.background = '#f4f4f4';
+        b.style.borderColor = 'transparent';
+        b.style.color = '#2D3142';
+      });
+      btn.style.background = 'rgba(107,207,127,0.15)';
+      btn.style.borderColor = '#6BCF7F';
+      btn.style.color = '#2D6B3A';
+      selectedType = btn.dataset.type;
+    });
+  });
+
+  ['feedbackText', 'feedbackContact'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('focus', () => { el.style.borderColor = '#6BCF7F'; });
+    el.addEventListener('blur', () => { el.style.borderColor = '#E8E8E8'; });
+  });
+
+  document.getElementById('submitFeedbackBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('submitFeedbackBtn');
+    const status = document.getElementById('feedbackStatus');
+    const text = document.getElementById('feedbackText').value.trim();
+    const contact = document.getElementById('feedbackContact').value.trim();
+
+    if (!text) {
+      status.style.color = '#FF6B6B';
+      status.textContent = 'Please write something before sending.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    btn.style.opacity = '0.7';
+    status.textContent = '';
+
+    try {
+      const form = new FormData();
+      form.append('type', selectedType.toUpperCase());
+      form.append('message', text);
+      form.append('contact', contact || 'Not provided');
+      form.append('streak', state.streak);
+      form.append('reborns', state.reborns);
+      form.append('version', 'v4.0');
+
+      const ep = ['https://formspree', '.io/f/', 'mlgwwdke'].join('');
+      const res = await fetch(ep, { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
+
+      if (res.ok) {
+        localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+        status.style.color = '#6BCF7F';
+        status.textContent = '✓ Received. Thank you!';
+        btn.textContent = 'Sent!';
+        document.getElementById('feedbackText').value = '';
+        document.getElementById('feedbackContact').value = '';
+        setTimeout(() => {
+          btn.textContent = 'Next submission in 48h';
+          btn.style.opacity = '0.5';
+          btn.style.cursor = 'not-allowed';
+        }, 2000);
+      } else {
+        throw new Error();
+      }
+    } catch {
+      status.style.color = '#FF6B6B';
+      status.textContent = 'Could not send — client-side issue.';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = 'Try Again';
+    }
+  });
+})();
+
+// === INITIALIZE ===
+loadState();
+setBackground(state.activeBackground);
+renderCosmetic();
+updateDisplay();
+document.getElementById('streakCount').textContent = state.streak; // cold streak
+const freezeIndicator = document.getElementById('freezeIndicator');
+if (freezeIndicator) {
+  freezeIndicator.textContent = state.streakFreezeActive ? '❄️' : '';
+}
+
+renderTodos();
+renderCalendar();
+renderGraph();
+renderShop();
+startHappyDecay();
+checkAchievements();
+
+if (state.showFloatingEmojis) {
+  document.getElementById('emojiToggle').classList.add('active');
+}
+if (state.soundEnabled) {
+  document.getElementById('soundToggle').classList.add('active');
+}
+
+if (state.autoStartBreaks) {
+  document.getElementById('autoBreakToggle').classList.add('active');
+}
+
+applyOpacity();
+
+// === AUTO-SAVE ===
+setInterval(saveState, 3000);
+window.addEventListener('beforeunload', saveState);
+window.addEventListener('pagehide', saveState);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) saveState();
+});
+
+// === KEEP-AWAKE ===
+let wakeLock;
+
+async function requestWakeLock() {
+  if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch {}
+  }
+}
+
+setInterval(() => {
+  if (state.isRunning && !state.isPaused) {
+    requestWakeLock();
+  }
+}, 30000);
+
+
+</script>
+
+</body>
+</html>
