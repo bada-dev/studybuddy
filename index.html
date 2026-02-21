@@ -5417,6 +5417,12 @@ function saveState() {
     currentCalendarMonth: state.currentCalendarMonth,
     currentCalendarYear: state.currentCalendarYear,
     studyingDisabledUntil: state.studyingDisabledUntil,
+	studyingDisabledUntil: state.studyingDisabledUntil,
+	isRunning: state.isRunning,
+	isPaused: state.isPaused,
+	mode: state.mode,
+	timeLeft: state.timeLeft,
+	stopwatchTime: state.stopwatchTime
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -5427,11 +5433,65 @@ function loadState() {
     try {
       const data = JSON.parse(saved);
       Object.assign(state, data);
-      state.timeLeft = state.durations[state.mode] * 60;
+      
+      // Only reset timeLeft if NOT in an active session
+      if (!state.isRunning && !state.isPaused) {
+        state.timeLeft = state.durations[state.mode] * 60;
+      }
       
       // Clear expired study cooldown
       if (state.studyingDisabledUntil && Date.now() >= state.studyingDisabledUntil) {
         state.studyingDisabledUntil = null;
+      }
+      
+      // Auto-pause if session was running on reload
+      if (state.isRunning && !state.isPaused) {
+        state.isPaused = true;
+        state.isRunning = false;
+        
+        // Update UI to paused state
+        setTimeout(() => {
+          sessionLabel.textContent = 'Session auto-paused';
+          actionBtn.textContent = 'Resume';
+          actionBtn.className = 'action-btn';
+          stopBtn.style.display = 'block';
+          
+          // Update mode tabs based on saved mode
+          document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.mode === state.mode) {
+              tab.classList.add('active');
+            }
+            tab.style.pointerEvents = 'none';
+            tab.style.opacity = '0.5';
+          });
+          
+          // Show pause modal
+          const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+          document.getElementById('pauseQuote').textContent = `"${randomQuote}"`;
+          document.getElementById('pauseTimer').textContent = '0:00';
+          document.getElementById('pauseModal').style.display = 'flex';
+          
+          // Start pause penalty timer
+          state.pauseElapsed = 0;
+          state.pauseInterval = setInterval(() => {
+            state.pauseElapsed++;
+            const mins = Math.floor(state.pauseElapsed / 60);
+            const secs = state.pauseElapsed % 60;
+            document.getElementById('pauseTimer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            if (state.pauseElapsed > 420 && state.pauseElapsed % 30 === 0) {
+              state.coins = Math.max(0, state.coins - 1);
+              updateDisplay();
+            }
+          }, 1000);
+          
+          // Update character appearance
+          updateCharacterAppearance();
+          renderBook();
+          
+          alert('⏸️ Your session was auto-paused due to page reload.\n\nClick Resume to continue!');
+        }, 500);
       }
       
       console.log('✅ Loaded');
