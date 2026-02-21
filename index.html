@@ -3716,7 +3716,7 @@ function renderGraph() {
   const datasets = Object.values(colorDatasets);
   
   // Add untagged data if it exists
-  if (untaggedData.some(val => val > 0)) {
+  if (true || untaggedData.some(val => val > 0)) {
     datasets.push({
       label: 'Untagged',
       data: untaggedData,
