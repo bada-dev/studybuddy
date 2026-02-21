@@ -11,7 +11,7 @@
 <!--
     Project: Study Buddy
     Author: ETHANTYAGI
-    Version: 3.1
+    Version: 3.1.1
 	ALL RIGHTS RESERVED
 -->
 
@@ -3650,6 +3650,10 @@ function renderCalendar() {
 }
 
 function renderGraph() {
+  if (typeof Chart === 'undefined') {
+    console.warn('⚠️ Chart.js not loaded yet, skipping graph render');
+    return;
+  }
   const canvas = document.getElementById('studyChart');
   if (!canvas) return;
   
@@ -5851,8 +5855,12 @@ if (freezeIndicator) {
 
 renderTodos();
 renderCalendar();
-renderGraph();
 renderShop();
+if (typeof Chart !== 'undefined') {
+  renderGraph();
+} else {
+  console.warn('⚠️ Chart.js not ready on startup — graph will load when you visit Stats');
+}
 startHappyDecay();
 checkAchievements();
 
