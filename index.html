@@ -2334,7 +2334,7 @@ button:disabled {
               </select>
             </div>
           </div>
-          <canvas id="studyChart" style="max-height: 200px;"></canvas>
+          <canvas id="studyChart" style="height: 200px; max-height: 200px;"></canvas>
           <div style="margin-top: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #5B4A3A;">
             Total: <span id="totalStudyTime">0</span> minutes
           </div>
@@ -4523,7 +4523,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
     }
     
     if (page === 'stats') {
-      renderGraph();
+      setTimeout(renderGraph, 450);
     }
     
   });
