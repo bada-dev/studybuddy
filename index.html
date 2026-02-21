@@ -4030,6 +4030,7 @@ function reviveBuddy() {
 }
 
 function startTimer() {
+  saveState();
   if (state.studyingDisabledUntil && Date.now() < state.studyingDisabledUntil && state.mode === 'focus') {
     const secondsLeft = Math.ceil((state.studyingDisabledUntil - Date.now()) / 1000);
     alert(`⏳ Please wait ${secondsLeft}s before starting focus again!`);
@@ -4423,6 +4424,7 @@ document.getElementById('saveTimeBtn').addEventListener('click', () => {
       state.timeLeft = minutes * 60;
     }
     updateDisplay();
+	saveState();
   }
   document.getElementById('timeModal').classList.remove('active');
 });
