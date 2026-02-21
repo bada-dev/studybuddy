@@ -5451,9 +5451,10 @@ function loadState() {
         state.isRunning = false;
         
         // Update UI to paused state
-        setTimeout(() => {
-          sessionLabel.textContent = 'Session auto-paused';
-          actionBtn.textContent = 'Resume';
+          setTimeout(() => {
+          const modeLabel = state.mode === 'long' ? 'Break' : state.mode === 'stopwatch' ? 'Stopwatch' : 'Focus';
+          sessionLabel.textContent = `${formatTime(state.timeLeft)} remaining — paused`;
+          actionBtn.textContent = `Continue ${modeLabel}`;
           actionBtn.className = 'action-btn';
           stopBtn.style.display = 'block';
           
@@ -5491,7 +5492,7 @@ function loadState() {
           updateCharacterAppearance();
           renderBook();
           
-          alert('⏸️ Your session was auto-paused due to page reload.\n\nClick Resume to continue!');
+          alert('⏸️ Your session was paused on reload.\n\nClick Continue to pick up where you left off!');
         }, 500);
       }
       
