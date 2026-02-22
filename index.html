@@ -11,7 +11,7 @@
 <!--
     Project: Study Buddy
     Author: ETHANTYAGI
-    Version: 3.1.3
+    Version: 3.2.0
 	ALL RIGHTS RESERVED
 -->
 
@@ -431,6 +431,27 @@ body {
   top: 8px;
   left: -7px;
   font-size: 14px;
+}
+
+.wizard-wand {
+  position: absolute;
+  right: -70px;
+  bottom: 30px;
+  width: 130px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.wizard-hand {
+  position: absolute;
+  right: 2px;
+  bottom: 52px;
+  width: 22px;
+  height: 16px;
+  background: linear-gradient(135deg, #C9996E, #B07A52);
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.2);
+  z-index: 11;
 }
 
 .pirate-hat {
@@ -2464,7 +2485,8 @@ button:disabled {
 
       <div class="shop-content">
         <div class="stats-header">Shop</div>
-        
+
+		<div id="shopDiscountBanner" style="margin-bottom:10px;"></div>
         <div class="shop-tabs-grid">
           <button class="shop-tab active" data-category="items">Items</button>
           <button class="shop-tab" data-category="cosmetics">Cosmetics</button>
@@ -3441,9 +3463,30 @@ function renderCosmetic() {
     case 'tophat':
       html = '<div class="top-hat"><div class="top-hat-top"></div><div class="top-hat-brim"></div></div>';
       break;
-    case 'wizard':
-      html = '<div class="wizard-hat"></div>';
-      break;
+	case 'wizard':
+    html = `<div class="wizard-hat"></div>
+  	<div class="wizard-hand"></div>
+  	<div class="wizard-wand">
+    <svg viewBox="-50 -50 300 300" style="width:100%;overflow:visible;">
+      <g transform="rotate(-25 100 75)">
+        <rect fill="white" x="5.07" y="129.83" width="117.08" height="17.1"
+          transform="translate(-77.95 30.6) rotate(-35.06)"/>
+        <rect fill="white" x="95" y="95" width="55" height="17.1"
+          transform="translate(-43.33 57.07) rotate(-35.06)"/>
+        <rect fill="#636363" x="120" y="82" width="32.89" height="17.1"
+          transform="translate(-43.33 57.07) rotate(-35.06)"/>
+        <ellipse fill="#cccccc" cx="15.6" cy="172.07" rx="3.29" ry="8.55"
+          transform="translate(-106.02 9.13) rotate(-35.06)"/>
+        <ellipse fill="#4b4b4b" cx="125" cy="100" rx="3.29" ry="8.55"
+          transform="translate(-51.12 51.12) rotate(-35.06)"/>
+        <polygon style="fill:#ffe131;animation:sparkle 1.4s ease-in-out infinite alternate;transform-origin:center;"
+          points="175 10 170 22 182 28 168 31 171 44 160 36 150 46 149 32 136 31 147 24 139 14 152 17 156 5 163 17 175 10"/>
+        <polygon style="fill:#ffe131;animation:sparkle 2s ease-in-out infinite alternate;transform-origin:center;"
+          points="160 35 157 42 165 45 156 47 158 54 151 49 145 55 144 48 137 47 143 43 139 38 146 40 148 34 152 40 160 35"/>
+      </g>
+    </svg>
+  </div>`;
+  break;
     case 'pirate':
       html = '<div class="pirate-hat"></div>';
       break;
@@ -4548,8 +4591,7 @@ function renderShop() {
   const bgDiscount = state.streak >= 50 ? 0.40 : 0;
   
   // Remove old banner
-  const existingBanner = document.getElementById('streakDiscountBanner');
-  if (existingBanner) existingBanner.remove();
+  document.getElementById('shopDiscountBanner').innerHTML = '';
   
   // Show streak discount banner
   if ((state.streak >= 30 && currentShopCategory === 'items') || 
@@ -4571,11 +4613,11 @@ function renderShop() {
     } else if (state.streak >= 40 && state.streak < 50 && currentShopCategory === 'backgrounds') {
       banner.textContent = `⚡ ${50 - state.streak} more days = 40% background discount!`;
     } else if (state.streak < 20 && (currentShopCategory === 'items' || currentShopCategory === 'backgrounds')) {
-      banner.textContent = `💡 Build streaks for shop discounts!`;
-      banner.style.opacity = '0.6';
+      return; // no banner when streak is low
     }
     
-    container.parentNode.insertBefore(banner, container);
+    document.getElementById('shopDiscountBanner').innerHTML = '';
+	document.getElementById('shopDiscountBanner').appendChild(banner);
   }
   
   if (currentShopCategory === 'items') {
@@ -4740,7 +4782,7 @@ function renderShop() {
           state.equippedCosmetic = state.equippedCosmetic === item.id ? null : item.id;
           renderCosmetic();
           renderShop();
-        } else if (canAfford) {
+        } else if (canAfford && confirm(`Buy ${item.name} for ${item.price} coins?`)) {
           state.coins -= item.price;
           state.ownedCosmetics.push(item.id);
           checkAchievements();
@@ -4787,7 +4829,7 @@ function renderShop() {
           state.equippedEmote = state.equippedEmote === item.id ? null : item.id;
           renderEmote();
           renderShop();
-        } else if (canAfford) {
+       } else if (canAfford && confirm(`Buy ${item.name} for ${item.price} coins?`)) {
           state.coins -= item.price;
           state.ownedEmotes.push(item.id);
           checkAchievements();
@@ -4841,7 +4883,7 @@ function renderShop() {
       el.addEventListener('click', () => {
         if (owned) {
           setBackground(bg.id);
-        } else if (canAfford) {
+        } else if (canAfford && confirm(`Buy ${bg.name} background for ${discountedPrice} coins?`)) {
           state.coins -= discountedPrice;
           state.ownedBackgrounds.push(bg.id);
           setBackground(bg.id);
