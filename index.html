@@ -3557,7 +3557,6 @@ function setBackground(bgId) {
 }
 function applyBlur() {
   const blur = state.blurAmount;
-  document.getElementById('blurValue').textContent = blur + 'px';
   
   document.querySelectorAll('.top-bar, .timer-area, .happy-meter-container, .mode-tabs').forEach(el => {
     el.style.backdropFilter = `blur(${blur}px)`;
@@ -4611,7 +4610,7 @@ function renderShop() {
     } else if (state.streak >= 40 && state.streak < 50 && currentShopCategory === 'backgrounds') {
       banner.textContent = `⚡ ${50 - state.streak} more days = 40% background discount!`;
     } else if (state.streak < 20 && (currentShopCategory === 'items' || currentShopCategory === 'backgrounds')) {
-      return; // no banner when streak is low
+		//alr
     }
     
     document.getElementById('shopDiscountBanner').innerHTML = '';
