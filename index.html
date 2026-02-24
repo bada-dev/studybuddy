@@ -5853,8 +5853,8 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
       form.append('reborns', state.reborns);
       form.append('version', 'v4.0');
 
-      const ep = ['https://formspree', '.io/f/', 'mlgwwdke'].join('');
-      const res = await fetch(ep, { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
+      const ep = 'https://usebasin.com/f/88efce3a7277';
+	  const res = await fetch(ep, { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
 
       if (res.ok) {
         localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
