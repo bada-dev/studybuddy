@@ -5912,7 +5912,8 @@ document.querySelectorAll('.modal').forEach(modal => {
   const lastUpdate = JSON.parse(localStorage.getItem('studyBuddyBuild') || '{}');
   const d = lastUpdate.date ? new Date(lastUpdate.date) : new Date();
   const formatted = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  document.getElementById('versionLabel').textContent = `Study Buddy — updated ${formatted}`;
+  const vl = document.getElementById('versionLabel');
+  if (vl) vl.textContent = `Study Buddy — updated ${formatted}`;
 })();
 	
 // === INITIALIZE ===
