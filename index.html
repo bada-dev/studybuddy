@@ -1426,6 +1426,8 @@ body {
   z-index: 1001;
   padding: 55px 20px 20px;
   box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
 }
 
 .menu-drawer.active {
@@ -2950,6 +2952,7 @@ button:disabled {
   <div class="menu-drawer" id="menuDrawer">
     <div class="menu-close" id="menuClose">×</div>
     <div class="menu-item" id="aboutBtn">ℹ️ About</div>
+	<div style="margin-top: auto; padding-top: 24px; font-size: 12px; font-weight: 700; color: rgba(45,49,66,0.4); letter-spacing: 0.5px;">Study Buddy v4.0</div>
     <div class="menu-item" id="historyBtn">📅 History</div>
     <div class="menu-item" id="helpBtn">❓ Help</div>
   </div>
@@ -5895,6 +5898,23 @@ document.querySelectorAll('.modal').forEach(modal => {
   });
 });
 
+(() => {
+  const BUILD_ID = 'build_001'; // ← only change this when you update
+  const stored = JSON.parse(localStorage.getItem('studyBuddyBuild') || '{}');
+  
+  if (stored.id !== BUILD_ID) {
+    localStorage.setItem('studyBuddyBuild', JSON.stringify({
+      id: BUILD_ID,
+      date: Date.now()
+    }));
+  }
+  
+  const lastUpdate = JSON.parse(localStorage.getItem('studyBuddyBuild') || '{}');
+  const d = lastUpdate.date ? new Date(lastUpdate.date) : new Date();
+  const formatted = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  document.getElementById('versionLabel').textContent = `Study Buddy — updated ${formatted}`;
+})();
+	
 // === INITIALIZE ===
 loadState();
 setBackground(state.activeBackground);
