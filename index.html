@@ -338,8 +338,9 @@ body {
 
 .character-mouth {
   position: absolute;
-  bottom: 55px;
-  left: 25px;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
   width: 34px;
   height: 18px;
   border: 3px solid #2D3142;
@@ -5880,6 +5881,19 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
     }
   });
 })();
+
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      // Don't close color modal this way (it has its own guard)
+      if (modal.id === 'colorModal') return;
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+      // Re-show flex for modals that use display:flex
+      if (modal.id === 'pauseModal') return;
+    }
+  });
+});
 
 // === INITIALIZE ===
 loadState();
