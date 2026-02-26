@@ -301,11 +301,18 @@ body {
   border: 2px solid rgba(0,0,0,0.2);
 }
 
-.character-eyes {
+.character-face {
   position: absolute;
-  top: 55px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.character-eyes {
   display: flex;
   gap: 28px;
 }
@@ -313,7 +320,7 @@ body {
 .eye {
   width: 20px;
   height: 20px;
-  background: #2D3142;
+  background: white; /* eye white */
   border-radius: 50%;
   position: relative;
   animation: blink 5s infinite;
@@ -328,12 +335,13 @@ body {
 .eye::after {
   content: '';
   position: absolute;
-  top: 4px;
-  left: 6px;
-  width: 7px;
-  height: 7px;
-  background: white;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: black; /* pupil */
   border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .character-mouth {
@@ -2232,6 +2240,7 @@ button:disabled {
           <div class="character" id="character">
             <div class="character-shadow"></div>
             <div class="character-body">
+			 <div class="character-face">
               <div class="character-eyes">
                 <div class="eye"></div>
                 <div class="eye"></div>
