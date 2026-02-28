@@ -305,18 +305,11 @@ body {
   border: 2px solid rgba(0,0,0,0.2);
 }
 
-.character-face {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
 .character-eyes {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 28px;
 }
@@ -349,7 +342,9 @@ body {
 }
 
 .character-mouth {
-  position: relative;
+  position: absolute;
+  bottom: 55px;
+  left: 25px;
   width: 34px;
   height: 18px;
   border: 3px solid #2D3142;
@@ -2238,13 +2233,11 @@ button:disabled {
           <div class="character" id="character">
             <div class="character-shadow"></div>
             <div class="character-body">
-			 <div class="character-face">
               <div class="character-eyes">
                 <div class="eye"></div>
                 <div class="eye"></div>
               </div>
               <div class="character-mouth"></div>
-            </div>
             <div id="cosmeticContainer"></div>
           </div>
           <div class="happy-meter-container">
