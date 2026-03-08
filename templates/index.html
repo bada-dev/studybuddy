@@ -2312,6 +2312,7 @@ button:disabled {
 
       <div class="stats-content">
       <div class="stats-header">Statistics</div>
+	  <button class="gcal-btn" id="leaderboardBtn" style="margin: 0 0 10px 0;">🏆 Leaderboard</button>
       <button class="gcal-btn" id="achievementsBtn" style="margin: 0 0 10px 0;">🏆 Achievements</button>
       <button class="gcal-btn" id="streakDisplay" style="margin: 0 0 20px 0; cursor: pointer;">🔥 Streak: <span id="streakCount">0</span> days <span id="freezeIndicator"></span></button>
         
@@ -2396,7 +2397,27 @@ button:disabled {
           <div>Settings</div>
         </div>
       </div>
-    </div>
+	</div>
+	
+	<div class="modal" id="leaderboardModal">
+  	  <div class="modal-content" style="max-height:75vh;overflow-y:auto;">
+    	<div class="modal-title">🌍 Leaderboard</div>
+    	<div id="leaderboardList" style="text-align:left;"></div>
+    	<button class="modal-btn primary" id="closeLeaderboardBtn" style="width:100%;margin-top:14px;">Close</button>
+  	  </div>
+	</div>
+
+	<div class="modal" id="usernameModal">
+  	  <div class="modal-content">
+    	<div class="modal-title">Set Username</div>
+    	<div class="modal-text">This cannot be changed later!</div>
+    	<input type="text" class="modal-input" id="usernameInput" placeholder="Your name..." maxlength="20">
+    	<div class="modal-buttons">
+      	  <button class="modal-btn secondary" id="cancelUsernameBtn">Cancel</button>
+      	  <button class="modal-btn primary" id="saveUsernameBtn">Set Forever</button>
+    	</div>
+  	  </div>
+	</div>
 
     <!-- To-Do Page -->
     <div class="page" id="todoPage">
@@ -2544,17 +2565,28 @@ button:disabled {
         </div>
       </div>
 
-      <div class="settings-content">
-        <div class="stats-header">Settings</div>
-        
-        <div class="settings-section">
-          <div class="section-title">Features</div>
-          <div class="setting-item">
-            <div class="setting-label">Sound Effects</div>
-            <div class="toggle" id="soundToggle">
-              <div class="toggle-slider"></div>
+		<div class="settings-content">
+          <div class="stats-header">Settings</div>
+          
+          <div class="settings-section">
+            <div class="section-title">Identity</div>
+            <div class="setting-item" id="usernameSettingItem" style="cursor:pointer;">
+              <div>
+                <div class="setting-label" id="usernameDisplayLabel">Username</div>
+                <div style="font-size:11px;color:#8B7A6A;margin-top:2px;" id="usernameSubLabel">Tap to set your name on the leaderboard</div>
+              </div>
+              <div style="font-size:22px;opacity:0.4;">›</div>
             </div>
           </div>
+
+          <div class="settings-section">
+            <div class="section-title">Features</div>
+            <div class="setting-item">
+              <div class="setting-label">Sound Effects</div>
+              <div class="toggle" id="soundToggle">
+                <div class="toggle-slider"></div>
+              </div>
+            </div>
           <div class="setting-item">
             <div class="setting-label">Floating Emojis</div>
             <div class="toggle active" id="emojiToggle">
@@ -5889,6 +5921,8 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
 
 // === INITIALIZE ===
 loadState();
+initUsername();
+syncLeaderboard();
 setBackground(state.activeBackground);
 renderCosmetic();
 updateDisplay();
@@ -5922,7 +5956,100 @@ if (state.autoStartBreaks) {
 
 applyOpacity();
 
+// === USERNAME & LEADERBOARD ===
+function initUsername() {
+  const saved = state.username;
+  if (saved) {
+    document.getElementById('usernameDisplayLabel').textContent = saved;
+    document.getElementById('usernameSubLabel').textContent = 'Username is locked forever';
+    document.getElementById('usernameSettingItem').style.cursor = 'default';
+  }
+}
+
+document.getElementById('usernameSettingItem').addEventListener('click', () => {
+  if (state.username) return;
+  document.getElementById('usernameModal').classList.add('active');
+  setTimeout(() => document.getElementById('usernameInput').focus(), 100);
+});
+
+document.getElementById('cancelUsernameBtn').addEventListener('click', () => {
+  document.getElementById('usernameModal').classList.remove('active');
+});
+
+document.getElementById('saveUsernameBtn').addEventListener('click', async () => {
+  const name = document.getElementById('usernameInput').value.trim();
+  if (!name) { alert('Please enter a username!'); return; }
+  if (!confirm(`Set "${name}" as your username forever? This cannot be undone!`)) return;
+  
+  const res = await fetch('/set-username', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username: name})
+  });
+  const data = await res.json();
+  if (data.success) {
+    state.username = name;
+    saveState();
+    initUsername();
+    document.getElementById('usernameModal').classList.remove('active');
+    syncLeaderboard();
+    alert(`✅ Username "${name}" set!`);
+  } else {
+    alert('❌ That username is already taken or invalid!');
+  }
+});
+
+async function syncLeaderboard() {
+  if (!state.username) return;
+  const totalMinutes = Object.values(state.studyMinutes).reduce((a, b) => a + b, 0);
+  await fetch('/sync-score', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      username: state.username,
+      totalMinutes,
+      streak: state.streak,
+      reborns: state.reborns
+    })
+  });
+}
+
+document.getElementById('leaderboardBtn').addEventListener('click', async () => {
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#6B7080;">Loading...</div>';
+  document.getElementById('leaderboardModal').classList.add('active');
+  
+  try {
+    const res = await fetch('/leaderboard');
+    const users = await res.json();
+    
+    if (users.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#6B7080;">No users yet! Set a username to appear here.</div>';
+      return;
+    }
+    
+    list.innerHTML = users.map((u, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+      const isYou = u.username === state.username;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;margin-bottom:8px;background:${isYou ? 'rgba(107,207,127,0.15)' : 'rgba(0,0,0,0.04)'};border:${isYou ? '2px solid #6BCF7F' : '2px solid transparent'};">
+        <div style="font-size:20px;width:30px;text-align:center;">${medal}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;">${u.username}${isYou ? ' (you)' : ''}</div>
+          <div style="font-size:11px;color:#6B7080;">${u.total_minutes} min studied • ${u.streak} day streak • ${u.reborns} reborns</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#FF6B6B;">Failed to load leaderboard.</div>';
+  }
+});
+
+document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
+  document.getElementById('leaderboardModal').classList.remove('active');
+});
+	
 // === AUTO-SAVE ===
+setInterval(() => { saveState(); syncLeaderboard(); }, 60000);
 setInterval(saveState, 3000);
 window.addEventListener('beforeunload', saveState);
 window.addEventListener('pagehide', saveState);
