@@ -5167,9 +5167,15 @@ document.getElementById('cancelAdminBtn').addEventListener('click', () => {
   document.getElementById('adminModal').classList.remove('active');
 });
 
-document.getElementById('confirmAdminBtn').addEventListener('click', () => {
+document.getElementById('confirmAdminBtn').addEventListener('click', async () => {
   const password = document.getElementById('adminPassword').value;
-  if (password === _k) {
+  const res = await fetch('/check-password', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({password})
+  });
+  const result = await res.json();
+  if (result.correct) {
     document.getElementById('adminModal').classList.remove('active');
     // Populate all fields
     document.getElementById('coinsInput').value = state.coins;
