@@ -9,26 +9,30 @@ def home():
 if __name__ == '__main__':
     app.run()
 ```
+Save as `main.py` (in Save dialog, set "Save as type" to **All Files**, name it `main.py`)
 
 ---
 
-### Step 3 — Create `requirements.txt`
+**File 2 — `requirements.txt`**
+New Notepad file, paste:
 ```
 flask==3.0.3
 gunicorn==22.0.0
 ```
+Save as `requirements.txt`
 
 ---
 
-### Step 4 — Create `Procfile`
+**File 3 — `Procfile`**
+New Notepad file, paste:
 ```
 web: gunicorn main:app
 ```
-
-No file extension — it's literally just called `Procfile`. This tells Render to serve your app using gunicorn.
+Save as `Procfile` — **no extension at all**, not `Procfile.txt`
 
 ---
 
-### Step 5 — Create `runtime.txt`
+**File 4 — `runtime.txt`**
+New Notepad file, paste:
 ```
 python-3.11.9
