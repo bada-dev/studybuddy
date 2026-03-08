@@ -1,3 +1,6 @@
 # studybuddy
+
+## No permission is granted to use, copy, modify, distribute, or reproduce this software or any part of it without explicit written permission from the author.
+
 A simple productivity app to manage tasks, notes, and schedules in one place.
-## © 2026 Ethan Tyagi. All rights reserved. No license is granted to use, copy, modify, or distribute this project or any part of it under any circumstances.
+It includes numerous major systems, like a fully functional shop, coin/currency system, happiness and food system, calenders, emotes, custom backgrounds, settings section, task/checklist and so, so much more.
