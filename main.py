@@ -6,7 +6,7 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
-ADMIN_PASSWORD = "987123"
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 @app.route('/check-password', methods=['POST'])
 def check_password():
