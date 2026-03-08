@@ -6,5 +6,15 @@ app = Flask(__name__)
 def home():
     return render_template('index.html')
 
+ADMIN_PASSWORD = "987123"
+
+@app.route('/check-password', methods=['POST'])
+def check_password():
+    from flask import request, jsonify
+    data = request.get_json()
+    if data.get('password') == ADMIN_PASSWORD:
+        return jsonify({'correct': True})
+    return jsonify({'correct': False})
+
 if __name__ == '__main__':
     app.run()
