@@ -6041,46 +6041,46 @@ applyOpacity();
 
 // === USERNAME & LEADERBOARD ===
 // === USERNAME & LEADERBOARD ===
-function renderMiniCharacter(user, size) {
-  const isLarge = size === 'large';
-  const w = isLarge ? 80 : 52;
-  const h = isLarge ? 92 : 62;
-  const bg = backgrounds.find(b => b.id === (user.active_background || 'default')) || backgrounds[0];
-  const cosmetic = cosmetics.find(c => c.id === user.equipped_cosmetic);
-  const cosmeticEmoji = cosmetic ? cosmetic.icon : '';
-  const happiness = user.happiness || 100;
-  const grayAmt = Math.max(0, 100 - happiness * 2);
-  const bw = Math.round(w * 0.6);
-  const bh = Math.round(h * 0.65);
-  const eyeSize = Math.round(w * 0.09);
-  const eyeGap = Math.round(w * 0.12);
-  const eyeTop = Math.round(bh * 0.24);
-  const mouthBottom = Math.round(bh * 0.14);
-  const mouthLeft = Math.round(bw * 0.16);
-  const mouthW = Math.round(bw * 0.36);
-  const mouthH = Math.round(bh * 0.13);
-
-  return `<div style="width:${w}px;height:${h}px;border-radius:14px;background:${bg.gradient};background-size:200% 200%;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,0.2);">
-    <div style="width:${bw}px;height:${bh}px;background:linear-gradient(135deg,#B8865C,#986652);border-radius:48% 52% 48% 52%/52% 55% 45% 48%;position:relative;filter:saturate(${100-grayAmt}%);border:1.5px solid rgba(0,0,0,0.2);">
-      <div style="position:absolute;top:${eyeTop}px;left:50%;transform:translateX(-50%);display:flex;gap:${eyeGap}px;">
-        <div style="width:${eyeSize}px;height:${eyeSize}px;background:#2D3142;border-radius:50%;"></div>
-        <div style="width:${eyeSize}px;height:${eyeSize}px;background:#2D3142;border-radius:50%;"></div>
-      </div>
-      <div style="position:absolute;bottom:${mouthBottom}px;left:${mouthLeft}px;width:${mouthW}px;height:${mouthH}px;border:1.5px solid #2D3142;border-top:none;border-radius:0 0 8px 8px;"></div>
-    </div>
-    ${cosmeticEmoji ? `<div style="position:absolute;top:-4px;font-size:${isLarge ? 20 : 13}px;left:50%;transform:translateX(-50%);">${cosmeticEmoji}</div>` : ''}
-  </div>`;
-}
+function renderMiniCharacter(user) { return ''; }
 
 function showUserProfile(user, rank) {
   const bg = backgrounds.find(b => b.id === (user.active_background || 'default')) || backgrounds[0];
   const medals = {1:'🥇',2:'🥈',3:'🥉'};
   const rankDisplay = medals[rank] || `#${rank}`;
   const isYou = user.username === state.username;
+  const width = user.character_width || 140;
+  const happiness = user.happiness || 100;
+  const grayAmt = Math.max(0, 100 - happiness * 2);
+  const cosmetic = cosmetics.find(c => c.id === user.equipped_cosmetic);
+
+  let cosmeticHTML = '';
+  if (cosmetic) {
+    switch(cosmetic.id) {
+      case 'tophat':
+        cosmeticHTML = '<div class="top-hat"><div class="top-hat-top"></div><div class="top-hat-brim"></div></div>';
+        break;
+      case 'wizard':
+        cosmeticHTML = `<div class="wizard-hat"></div><div class="wizard-hand"></div>`;
+        break;
+      case 'pirate':
+        cosmeticHTML = '<div class="pirate-hat"></div>';
+        break;
+    }
+  }
 
   document.getElementById('userProfileContent').innerHTML = `
-    <div style="margin:-26px -26px 16px;border-radius:16px 16px 0 0;padding:24px;background:${bg.gradient};background-size:200% 200%;display:flex;flex-direction:column;align-items:center;gap:10px;">
-      ${renderMiniCharacter(user, 'large')}
+    <div style="margin:-26px -26px 16px;border-radius:16px 16px 0 0;padding:24px 16px;background:${bg.gradient};background-size:200% 200%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <div style="position:relative;width:${width}px;height:${Math.round(width*1.14)}px;animation:breathe 3s ease-in-out infinite alternate;">
+        <div class="character-shadow" style="width:${Math.min(width*0.7,180)}px;"></div>
+        <div class="character-body" style="filter:saturate(${100-grayAmt}%) brightness(${100-grayAmt*0.3}%);">
+          <div class="character-eyes">
+            <div class="eye"></div>
+            <div class="eye"></div>
+          </div>
+          <div class="character-mouth" style="${happiness<=20?'border-bottom:none;border-top:4px solid #2D3142;border-radius:40px 40px 0 0;bottom:45px;left:24px;width:32px;height:22px;':happiness<=50?'border-bottom:none;border-top:3px solid #2D3142;border-radius:35px 35px 0 0;bottom:48px;left:26px;width:30px;':''}"></div>
+        </div>
+        ${cosmeticHTML}
+      </div>
       <div style="font-size:20px;font-weight:800;color:white;text-shadow:0 2px 8px rgba(0,0,0,0.4);">${user.username}${isYou ? ' 👤' : ''}</div>
       <div style="font-size:22px;">${rankDisplay}</div>
     </div>
@@ -6098,7 +6098,7 @@ function showUserProfile(user, rank) {
         <div style="font-size:10px;color:#6B7080;font-weight:600;">REBORNS 🏋️</div>
       </div>
       <div style="background:rgba(255,107,107,0.1);border-radius:12px;padding:12px;text-align:center;">
-        <div style="font-size:22px;font-weight:800;color:#2D3142;">${user.happiness}%</div>
+        <div style="font-size:22px;font-weight:800;color:#2D3142;">${happiness}%</div>
         <div style="font-size:10px;color:#6B7080;font-weight:600;">HAPPINESS 😊</div>
       </div>
     </div>
@@ -6241,8 +6241,7 @@ document.getElementById('leaderboardBtn').addEventListener('click', async () => 
         const col = document.createElement('div');
         col.className = 'lb-podium-col';
         col.innerHTML = `
-          ${rank === 1 ? '<div style="font-size:22px;animation:crownBounce 1.2s ease-in-out infinite;">👑</div>' : '<div style="height:30px;"></div>'}
-          ${renderMiniCharacter(user)}
+          $${rank === 1 ? '<div style="font-size:22px;animation:crownBounce 1.2s ease-in-out infinite;">👑</div>' : '<div style="height:30px;"></div>'}
           <div style="font-size:11px;font-weight:700;text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user.username}${isYou ? ' 👤' : ''}</div>
           <div style="font-size:10px;color:#6B7080;">${user.total_minutes}m</div>
           <div class="lb-podium-base" style="height:${height};background:${bg};animation:${glow};">${medal}</div>
@@ -6262,7 +6261,6 @@ document.getElementById('leaderboardBtn').addEventListener('click', async () => 
       row.className = 'lb-row' + (isYou ? ' is-you' : '');
       row.innerHTML = `
         <div style="font-size:15px;font-weight:700;width:24px;text-align:center;color:#6B7080;">${rank}</div>
-        ${renderMiniCharacter(user)}
         <div style="flex:1;min-width:0;">
           <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user.username}${isYou ? ' 👤' : ''}</div>
           <div style="font-size:10px;color:#6B7080;">${user.total_minutes}m • ${user.streak}🔥 • ${user.reborns} reborns</div>
