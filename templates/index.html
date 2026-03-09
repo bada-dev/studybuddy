@@ -2180,6 +2180,67 @@ button:disabled {
   transform: none;
 }
 
+/* Leaderboard */
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 16px 0 0;
+}
+
+.lb-podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.lb-podium-col:active { transform: scale(0.95); }
+
+.lb-podium-base {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  background: rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lb-row:active { transform: scale(0.98); }
+.lb-row.is-you { background: rgba(107,207,127,0.15); border: 2px solid #6BCF7F; }
+
+@keyframes crownBounce {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-6px) rotate(5deg); }
+}
+
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+  50% { box-shadow: 0 0 30px rgba(255,215,0,0.9), 0 0 60px rgba(255,165,0,0.4); }
+}
+
+@keyframes silverPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(192,192,192,0.3); }
+  50% { box-shadow: 0 0 20px rgba(192,192,192,0.7); }
+}
+
 /* Reborn evolution glow */
 .character.reborn-evolving .character-body {
   transition: box-shadow 1s ease, filter 0.5s;
@@ -2400,11 +2461,29 @@ button:disabled {
 	</div>
 	
 	<div class="modal" id="leaderboardModal">
-  	  <div class="modal-content" style="max-height:75vh;overflow-y:auto;">
-    	<div class="modal-title">🌍 Leaderboard</div>
-    	<div id="leaderboardList" style="text-align:left;"></div>
-    	<button class="modal-btn primary" id="closeLeaderboardBtn" style="width:100%;margin-top:14px;">Close</button>
-  	  </div>
+	  <div class="modal-content" style="max-width:380px;max-height:82vh;overflow-y:auto;padding:20px;">
+	    <div class="modal-title">🌍 World Leaderboard</div>
+	    <div id="leaderboardList"></div>
+	    <button class="modal-btn primary" id="closeLeaderboardBtn" style="width:100%;margin-top:14px;">Close</button>
+	  </div>
+	</div>
+	
+	<div class="modal" id="userProfileModal">
+	  <div class="modal-content" style="max-width:300px;padding:26px;overflow:hidden;">
+	    <div id="userProfileContent"></div>
+	    <button class="modal-btn primary" id="closeProfileBtn" style="width:100%;margin-top:12px;">Close</button>
+	  </div>
+	</div>
+	
+	<div class="modal" id="rejoinModal">
+	  <div class="modal-content">
+	    <div class="modal-title">👋 Welcome Back!</div>
+	    <div class="modal-text">You were removed from the leaderboard due to 3 days of inactivity. Your stats are saved!</div>
+	    <div class="modal-buttons">
+	      <button class="modal-btn secondary" id="skipRejoinBtn">Stay Hidden</button>
+	      <button class="modal-btn primary" id="confirmRejoinBtn">Rejoin</button>
+	    </div>
+	  </div>
 	</div>
 
 	<div class="modal" id="usernameModal">
@@ -5793,14 +5872,7 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
 
 // === FEEDBACK SYSTEM ===
 (function() {
-  const COOLDOWN_KEY = 'studyBuddyFeedbackCooldown';
-  const COOLDOWN_MS = 48 * 60 * 60 * 1000;
   let selectedType = 'suggestion';
-
-  function getRemainingCooldown() {
-    const last = parseInt(localStorage.getItem(COOLDOWN_KEY) || '0');
-    return Math.max(0, COOLDOWN_MS - (Date.now() - last));
-  }
 
   function formatCooldown(ms) {
     const h = Math.floor(ms / 3600000);
@@ -5808,8 +5880,7 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   }
 
-  document.getElementById('openFeedbackBtn').addEventListener('click', () => {
-    const remaining = getRemainingCooldown();
+  document.getElementById('openFeedbackBtn').addEventListener('click', async () => {
     const btn = document.getElementById('submitFeedbackBtn');
     const textarea = document.getElementById('feedbackText');
     const contact = document.getElementById('feedbackContact');
@@ -5818,27 +5889,38 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
     textarea.value = '';
     contact.value = '';
     status.textContent = '';
+    btn.textContent = 'Checking...';
+    btn.disabled = true;
 
-    if (remaining > 0) {
-      btn.disabled = true;
-      btn.style.opacity = '0.5';
-      btn.textContent = `Cooldown — ${formatCooldown(remaining)} left`;
-      textarea.disabled = true;
-      textarea.style.opacity = '0.5';
-      contact.disabled = true;
-      contact.style.opacity = '0.5';
-      status.textContent = `You can submit again in ${formatCooldown(remaining)}.`;
-    } else {
+    document.getElementById('feedbackModal').classList.add('active');
+
+    try {
+      const res = await fetch('/feedback-cooldown');
+      const data = await res.json();
+      const remaining = data.remaining;
+
+      if (remaining > 0) {
+        btn.style.opacity = '0.5';
+        btn.textContent = `Cooldown — ${formatCooldown(remaining)} left`;
+        textarea.disabled = true;
+        textarea.style.opacity = '0.5';
+        contact.disabled = true;
+        contact.style.opacity = '0.5';
+        status.textContent = `You can submit again in ${formatCooldown(remaining)}.`;
+      } else {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.textContent = 'Send Feedback';
+        textarea.disabled = false;
+        textarea.style.opacity = '1';
+        contact.disabled = false;
+        contact.style.opacity = '1';
+      }
+    } catch {
       btn.disabled = false;
       btn.style.opacity = '1';
       btn.textContent = 'Send Feedback';
-      textarea.disabled = false;
-      textarea.style.opacity = '1';
-      contact.disabled = false;
-      contact.style.opacity = '1';
     }
-
-    document.getElementById('feedbackModal').classList.add('active');
   });
 
   document.getElementById('closeFeedbackModalBtn').addEventListener('click', () => {
@@ -5895,7 +5977,7 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
       const res = await fetch(ep, { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
 
       if (res.ok) {
-        localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+        await fetch('/set-feedback-cooldown', { method: 'POST' });
         status.style.color = '#6BCF7F';
         status.textContent = '✓ Received. Thank you!';
         btn.textContent = 'Sent!';
@@ -5911,7 +5993,7 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
       }
     } catch {
       status.style.color = '#FF6B6B';
-      status.textContent = 'Could not send — client-side issue.';
+      status.textContent = 'Could not send — try again.';
       btn.disabled = false;
       btn.style.opacity = '1';
       btn.textContent = 'Try Again';
@@ -5923,6 +6005,7 @@ document.getElementById('copyRawStatsBtn')?.addEventListener('click', () => {
 loadState();
 initUsername();
 syncLeaderboard();
+checkIfKickedFromLeaderboard();
 setBackground(state.activeBackground);
 renderCosmetic();
 updateDisplay();
@@ -5957,6 +6040,72 @@ if (state.autoStartBreaks) {
 applyOpacity();
 
 // === USERNAME & LEADERBOARD ===
+// === USERNAME & LEADERBOARD ===
+function renderMiniCharacter(user, size) {
+  const isLarge = size === 'large';
+  const w = isLarge ? 80 : 52;
+  const h = isLarge ? 92 : 62;
+  const bg = backgrounds.find(b => b.id === (user.active_background || 'default')) || backgrounds[0];
+  const cosmetic = cosmetics.find(c => c.id === user.equipped_cosmetic);
+  const cosmeticEmoji = cosmetic ? cosmetic.icon : '';
+  const happiness = user.happiness || 100;
+  const grayAmt = Math.max(0, 100 - happiness * 2);
+  const bw = Math.round(w * 0.6);
+  const bh = Math.round(h * 0.65);
+  const eyeSize = Math.round(w * 0.09);
+  const eyeGap = Math.round(w * 0.12);
+  const eyeTop = Math.round(bh * 0.24);
+  const mouthBottom = Math.round(bh * 0.14);
+  const mouthLeft = Math.round(bw * 0.16);
+  const mouthW = Math.round(bw * 0.36);
+  const mouthH = Math.round(bh * 0.13);
+
+  return `<div style="width:${w}px;height:${h}px;border-radius:14px;background:${bg.gradient};background-size:200% 200%;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,0.2);">
+    <div style="width:${bw}px;height:${bh}px;background:linear-gradient(135deg,#B8865C,#986652);border-radius:48% 52% 48% 52%/52% 55% 45% 48%;position:relative;filter:saturate(${100-grayAmt}%);border:1.5px solid rgba(0,0,0,0.2);">
+      <div style="position:absolute;top:${eyeTop}px;left:50%;transform:translateX(-50%);display:flex;gap:${eyeGap}px;">
+        <div style="width:${eyeSize}px;height:${eyeSize}px;background:#2D3142;border-radius:50%;"></div>
+        <div style="width:${eyeSize}px;height:${eyeSize}px;background:#2D3142;border-radius:50%;"></div>
+      </div>
+      <div style="position:absolute;bottom:${mouthBottom}px;left:${mouthLeft}px;width:${mouthW}px;height:${mouthH}px;border:1.5px solid #2D3142;border-top:none;border-radius:0 0 8px 8px;"></div>
+    </div>
+    ${cosmeticEmoji ? `<div style="position:absolute;top:-4px;font-size:${isLarge ? 20 : 13}px;left:50%;transform:translateX(-50%);">${cosmeticEmoji}</div>` : ''}
+  </div>`;
+}
+
+function showUserProfile(user, rank) {
+  const bg = backgrounds.find(b => b.id === (user.active_background || 'default')) || backgrounds[0];
+  const medals = {1:'🥇',2:'🥈',3:'🥉'};
+  const rankDisplay = medals[rank] || `#${rank}`;
+  const isYou = user.username === state.username;
+
+  document.getElementById('userProfileContent').innerHTML = `
+    <div style="margin:-26px -26px 16px;border-radius:16px 16px 0 0;padding:24px;background:${bg.gradient};background-size:200% 200%;display:flex;flex-direction:column;align-items:center;gap:10px;">
+      ${renderMiniCharacter(user, 'large')}
+      <div style="font-size:20px;font-weight:800;color:white;text-shadow:0 2px 8px rgba(0,0,0,0.4);">${user.username}${isYou ? ' 👤' : ''}</div>
+      <div style="font-size:22px;">${rankDisplay}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+      <div style="background:rgba(107,207,127,0.1);border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#2D3142;">${user.total_minutes}</div>
+        <div style="font-size:10px;color:#6B7080;font-weight:600;">MINUTES STUDIED</div>
+      </div>
+      <div style="background:rgba(255,184,77,0.1);border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#2D3142;">${user.streak}</div>
+        <div style="font-size:10px;color:#6B7080;font-weight:600;">DAY STREAK 🔥</div>
+      </div>
+      <div style="background:rgba(107,207,127,0.1);border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#2D3142;">${user.reborns}</div>
+        <div style="font-size:10px;color:#6B7080;font-weight:600;">REBORNS 🏋️</div>
+      </div>
+      <div style="background:rgba(255,107,107,0.1);border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#2D3142;">${user.happiness}%</div>
+        <div style="font-size:10px;color:#6B7080;font-weight:600;">HAPPINESS 😊</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('userProfileModal').classList.add('active');
+}
+
 function initUsername() {
   const saved = state.username;
   if (saved) {
@@ -5979,8 +6128,7 @@ document.getElementById('cancelUsernameBtn').addEventListener('click', () => {
 document.getElementById('saveUsernameBtn').addEventListener('click', async () => {
   const name = document.getElementById('usernameInput').value.trim();
   if (!name) { alert('Please enter a username!'); return; }
-  if (!confirm(`Set "${name}" as your username forever? This cannot be undone!`)) return;
-  
+  if (!confirm(`Set "${name}" forever? Cannot be undone!`)) return;
   const res = await fetch('/set-username', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -5992,10 +6140,10 @@ document.getElementById('saveUsernameBtn').addEventListener('click', async () =>
     saveState();
     initUsername();
     document.getElementById('usernameModal').classList.remove('active');
-    syncLeaderboard();
+    await syncLeaderboard();
     alert(`✅ Username "${name}" set!`);
   } else {
-    alert('❌ That username is already taken or invalid!');
+    alert(`❌ ${data.error || 'Could not set username'}`);
   }
 });
 
@@ -6009,36 +6157,121 @@ async function syncLeaderboard() {
       username: state.username,
       totalMinutes,
       streak: state.streak,
-      reborns: state.reborns
+      reborns: state.reborns,
+      equippedCosmetic: state.equippedCosmetic,
+      activeBackground: state.activeBackground,
+      characterWidth: state.characterWidth,
+      happiness: Math.floor(state.happiness)
     })
   });
 }
+
+async function checkIfKickedFromLeaderboard() {
+  if (!state.username) return;
+  try {
+    const res = await fetch('/check-active', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: state.username})
+    });
+    const data = await res.json();
+    if (data.exists && !data.active) {
+      document.getElementById('rejoinModal').classList.add('active');
+    }
+  } catch {}
+}
+
+document.getElementById('skipRejoinBtn').addEventListener('click', () => {
+  document.getElementById('rejoinModal').classList.remove('active');
+});
+
+document.getElementById('confirmRejoinBtn').addEventListener('click', async () => {
+  const res = await fetch('/rejoin', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username: state.username})
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('rejoinModal').classList.remove('active');
+    await syncLeaderboard();
+    alert('✅ You\'re back on the leaderboard!');
+  }
+});
+
+document.getElementById('closeProfileBtn').addEventListener('click', () => {
+  document.getElementById('userProfileModal').classList.remove('active');
+});
 
 document.getElementById('leaderboardBtn').addEventListener('click', async () => {
   const list = document.getElementById('leaderboardList');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:#6B7080;">Loading...</div>';
   document.getElementById('leaderboardModal').classList.add('active');
-  
+  await syncLeaderboard();
+
   try {
     const res = await fetch('/leaderboard');
     const users = await res.json();
-    
+
+    list.innerHTML = '';
+
     if (users.length === 0) {
       list.innerHTML = '<div style="text-align:center;padding:20px;color:#6B7080;">No users yet! Set a username to appear here.</div>';
       return;
     }
-    
-    list.innerHTML = users.map((u, i) => {
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-      const isYou = u.username === state.username;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;margin-bottom:8px;background:${isYou ? 'rgba(107,207,127,0.15)' : 'rgba(0,0,0,0.04)'};border:${isYou ? '2px solid #6BCF7F' : '2px solid transparent'};">
-        <div style="font-size:20px;width:30px;text-align:center;">${medal}</div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:14px;">${u.username}${isYou ? ' (you)' : ''}</div>
-          <div style="font-size:11px;color:#6B7080;">${u.total_minutes} min studied • ${u.streak} day streak • ${u.reborns} reborns</div>
+
+    // === PODIUM (top 3) ===
+    if (users.length >= 1) {
+      const podium = document.createElement('div');
+      podium.className = 'lb-podium';
+
+      const podiumOrder = users.length >= 3 ? [
+        {user: users[1], rank: 2, height: '80px', bg: 'linear-gradient(135deg,#C0C0C0,#909090)', glow: 'silverPulse 2s infinite', medal: '🥈'},
+        {user: users[0], rank: 1, height: '115px', bg: 'linear-gradient(135deg,#FFD700,#FFA500)', glow: 'goldPulse 1.5s infinite', medal: '🥇'},
+        {user: users[2], rank: 3, height: '60px', bg: 'linear-gradient(135deg,#CD7F32,#A0522D)', glow: 'none', medal: '🥉'},
+      ] : users.length === 2 ? [
+        {user: users[1], rank: 2, height: '80px', bg: 'linear-gradient(135deg,#C0C0C0,#909090)', glow: 'silverPulse 2s infinite', medal: '🥈'},
+        {user: users[0], rank: 1, height: '115px', bg: 'linear-gradient(135deg,#FFD700,#FFA500)', glow: 'goldPulse 1.5s infinite', medal: '🥇'},
+      ] : [
+        {user: users[0], rank: 1, height: '115px', bg: 'linear-gradient(135deg,#FFD700,#FFA500)', glow: 'goldPulse 1.5s infinite', medal: '🥇'},
+      ];
+
+      podiumOrder.forEach(({user, rank, height, bg, glow, medal}) => {
+        const isYou = user.username === state.username;
+        const col = document.createElement('div');
+        col.className = 'lb-podium-col';
+        col.innerHTML = `
+          ${rank === 1 ? '<div style="font-size:22px;animation:crownBounce 1.2s ease-in-out infinite;">👑</div>' : '<div style="height:30px;"></div>'}
+          ${renderMiniCharacter(user)}
+          <div style="font-size:11px;font-weight:700;text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user.username}${isYou ? ' 👤' : ''}</div>
+          <div style="font-size:10px;color:#6B7080;">${user.total_minutes}m</div>
+          <div class="lb-podium-base" style="height:${height};background:${bg};animation:${glow};">${medal}</div>
+        `;
+        col.addEventListener('click', () => showUserProfile(user, rank));
+        podium.appendChild(col);
+      });
+
+      list.appendChild(podium);
+    }
+
+    // === REST OF LIST ===
+    users.slice(3).forEach((user, i) => {
+      const rank = i + 4;
+      const isYou = user.username === state.username;
+      const row = document.createElement('div');
+      row.className = 'lb-row' + (isYou ? ' is-you' : '');
+      row.innerHTML = `
+        <div style="font-size:15px;font-weight:700;width:24px;text-align:center;color:#6B7080;">${rank}</div>
+        ${renderMiniCharacter(user)}
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user.username}${isYou ? ' 👤' : ''}</div>
+          <div style="font-size:10px;color:#6B7080;">${user.total_minutes}m • ${user.streak}🔥 • ${user.reborns} reborns</div>
         </div>
-      </div>`;
-    }).join('');
+      `;
+      row.addEventListener('click', () => showUserProfile(user, rank));
+      list.appendChild(row);
+    });
+
   } catch {
     list.innerHTML = '<div style="text-align:center;padding:20px;color:#FF6B6B;">Failed to load leaderboard.</div>';
   }
@@ -6049,7 +6282,7 @@ document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
 });
 	
 // === AUTO-SAVE ===
-setInterval(() => { saveState(); syncLeaderboard(); }, 60000);
+setInterval(() => { saveState(); syncLeaderboard(); }, 120000);
 setInterval(saveState, 3000);
 window.addEventListener('beforeunload', saveState);
 window.addEventListener('pagehide', saveState);
