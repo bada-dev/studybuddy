@@ -11,7 +11,7 @@
 <!--
     Project: Study Buddy
     Author: ETHANTYAGI
-    Version: 3.2.0
+    Version: 4.2.0
 	ALL RIGHTS RESERVED
 -->
 
@@ -2697,7 +2697,7 @@ button:disabled {
           </div>
         </div>
 
-        <div class="settings-section">
+		<div class="settings-section">
           <div class="section-title">Happiness Decay</div>
           <div class="setting-item">
             <div class="setting-label">Decay Rate</div>
@@ -2709,7 +2709,19 @@ button:disabled {
           </div>
         </div>
 
-		<div class="settings-section">
+        <div class="settings-section">
+          <div class="section-title">Display</div>
+          <div class="setting-item">
+            <div class="setting-label">Zoom</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button id="zoomOutBtn" style="width:34px;height:34px;border-radius:17px;border:none;background:rgba(0,0,0,0.1);font-size:20px;cursor:pointer;font-weight:700;">−</button>
+              <div id="zoomValue" style="font-weight:700;font-size:14px;min-width:40px;text-align:center;">100%</div>
+              <button id="zoomInBtn" style="width:34px;height:34px;border-radius:17px;border:none;background:rgba(0,0,0,0.1);font-size:20px;cursor:pointer;font-weight:700;">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
           <div class="section-title">Feedback</div>
           <div style="background: rgba(255,255,255,0.35); border-radius: 14px; padding: 16px; box-shadow: 0 3px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; cursor: pointer;" id="openFeedbackBtn">
             <div>
@@ -6038,8 +6050,8 @@ if (state.autoStartBreaks) {
 }
 
 applyOpacity();
+applyZoom();
 
-// === USERNAME & LEADERBOARD ===
 // === USERNAME & LEADERBOARD ===
 function renderMiniCharacter(user) { return ''; }
 
@@ -6277,6 +6289,26 @@ document.getElementById('leaderboardBtn').addEventListener('click', async () => 
 
 document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
   document.getElementById('leaderboardModal').classList.remove('active');
+});
+
+// === ZOOM ===
+function applyZoom() {
+  const z = state.zoomLevel || 1;
+  document.querySelector('.container').style.transform = `scale(${z})`;
+  document.querySelector('.container').style.transformOrigin = 'top center';
+  document.getElementById('zoomValue').textContent = Math.round(z * 100) + '%';
+}
+
+document.getElementById('zoomInBtn').addEventListener('click', () => {
+  state.zoomLevel = Math.min(1.4, (state.zoomLevel || 1) + 0.05);
+  applyZoom();
+  saveState();
+});
+
+document.getElementById('zoomOutBtn').addEventListener('click', () => {
+  state.zoomLevel = Math.max(0.6, (state.zoomLevel || 1) - 0.05);
+  applyZoom();
+  saveState();
 });
 	
 // === AUTO-SAVE ===
