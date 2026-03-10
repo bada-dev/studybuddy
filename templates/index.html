@@ -6294,8 +6294,9 @@ document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
 // === ZOOM ===
 function applyZoom() {
   const z = state.zoomLevel || 1;
-  document.querySelector('.container').style.transform = `scale(${z})`;
-  document.querySelector('.container').style.transformOrigin = 'top center';
+  const el = document.getElementById('character');
+  el.style.transform = `scale(${z})`;
+  el.style.transformOrigin = 'center center';
   document.getElementById('zoomValue').textContent = Math.round(z * 100) + '%';
 }
 
