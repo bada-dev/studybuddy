@@ -6313,7 +6313,11 @@ document.getElementById('zoomOutBtn').addEventListener('click', () => {
   applyZoom();
   saveState();
 });
-	
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+
 // === AUTO-SAVE ===
 setInterval(() => { saveState(); syncLeaderboard(); }, 120000);
 setInterval(saveState, 3000);
