@@ -13,7 +13,7 @@
 <!--
     Project: Study Buddy
     Author: ETHANTYAGI
-    Version: 4.2.0
+    Version: 4.2.1
 	ALL RIGHTS RESERVED
 -->
 
@@ -2712,18 +2712,6 @@ button:disabled {
         </div>
 
         <div class="settings-section">
-          <div class="section-title">Display</div>
-          <div class="setting-item">
-            <div class="setting-label">Zoom</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <button id="zoomOutBtn" style="width:34px;height:34px;border-radius:17px;border:none;background:rgba(0,0,0,0.1);font-size:20px;cursor:pointer;font-weight:700;">−</button>
-              <div id="zoomValue" style="font-weight:700;font-size:14px;min-width:40px;text-align:center;">100%</div>
-              <button id="zoomInBtn" style="width:34px;height:34px;border-radius:17px;border:none;background:rgba(0,0,0,0.1);font-size:20px;cursor:pointer;font-weight:700;">+</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
           <div class="section-title">Feedback</div>
           <div style="background: rgba(255,255,255,0.35); border-radius: 14px; padding: 16px; box-shadow: 0 3px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; cursor: pointer;" id="openFeedbackBtn">
             <div>
@@ -2882,7 +2870,14 @@ button:disabled {
           <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">📐 Char Width px</div>
           <input type="number" class="modal-input" id="charWidthInput" min="140" max="420" value="140" style="margin:0;padding:10px;">
         </div>
-      </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">⬇️ Move Down px</div>
+          <input type="number" class="modal-input" id="charOffsetYInput" min="-200" max="200" value="0" style="margin:0;padding:10px;">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">➡️ Move Right px</div>
+          <input type="number" class="modal-input" id="charOffsetXInput" min="-200" max="200" value="0" style="margin:0;padding:10px;">
+      	</div>
       <button class="modal-btn primary" id="saveResourcesBtn" style="width:100%;margin-bottom:8px;">💾 Save Resources</button>
       <div style="display:flex;gap:6px;">
         <button class="modal-btn secondary" id="maxHappinessBtn" style="flex:1;font-size:11px;padding:9px;">❤️ Max Happy</button>
@@ -5307,6 +5302,8 @@ document.getElementById('confirmAdminBtn').addEventListener('click', async () =>
     document.getElementById('carrotsInput').value = state.carrots;
     document.getElementById('happinessInput').value = Math.floor(state.happiness);
     document.getElementById('charWidthInput').value = state.characterWidth;
+	document.getElementById('charOffsetXInput').value = state.charOffsetX || 0;
+	document.getElementById('charOffsetYInput').value = state.charOffsetY || 0;
     document.getElementById('streakAdminInput').value = state.streak;
     document.getElementById('rebornsInput').value = state.reborns;
     document.getElementById('revivalsInput').value = state.revivals;
@@ -5351,6 +5348,9 @@ document.getElementById('saveResourcesBtn').addEventListener('click', () => {
   state.coins = parseInt(document.getElementById('coinsInput').value) || 0;
   state.carrots = parseInt(document.getElementById('carrotsInput').value) || 0;
   state.characterWidth = Math.max(140, Math.min(420, parseInt(document.getElementById('charWidthInput').value) || 140));
+  state.charOffsetX = parseInt(document.getElementById('charOffsetXInput').value) || 0;
+  state.charOffsetY = parseInt(document.getElementById('charOffsetYInput').value) || 0;
+  applyCharOffset();
   if (newHappiness > 0 && state.isDead) { state.isDead = false; state.isReviving = false; }
   else if (newHappiness === 0 && !state.isDead) { handleDeath(); }
   state.happiness = newHappiness;
@@ -6052,7 +6052,7 @@ if (state.autoStartBreaks) {
 }
 
 applyOpacity();
-applyZoom();
+applyCharOffset();
 
 // === USERNAME & LEADERBOARD ===
 function renderMiniCharacter(user) { return ''; }
@@ -6293,29 +6293,14 @@ document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {
   document.getElementById('leaderboardModal').classList.remove('active');
 });
 
-// === ZOOM ===
-function applyZoom() {
-  const z = state.zoomLevel || 1;
-  const el = document.getElementById('character');
-  el.style.transform = `scale(${z})`;
-  el.style.transformOrigin = 'center center';
-  document.getElementById('zoomValue').textContent = Math.round(z * 100) + '%';
-}
-
-document.getElementById('zoomInBtn').addEventListener('click', () => {
-  state.zoomLevel = Math.min(1.4, (state.zoomLevel || 1) + 0.05);
-  applyZoom();
-  saveState();
-});
-
-document.getElementById('zoomOutBtn').addEventListener('click', () => {
-  state.zoomLevel = Math.max(0.6, (state.zoomLevel || 1) - 0.05);
-  applyZoom();
-  saveState();
-});
-
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
+}
+
+function applyCharOffset() {
+  const el = document.getElementById('character');
+  el.style.marginTop = (state.charOffsetY || 0) + 'px';
+  el.style.marginLeft = (state.charOffsetX || 0) + 'px';
 }
 
 // === AUTO-SAVE ===
