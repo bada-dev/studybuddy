@@ -1,0 +1,21 @@
+{
+  "name": "Study Buddy",
+  "short_name": "StudyBuddy",
+  "id": "studybuddy-ethantyagi",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#c4a07a",
+  "theme_color": "#c4a07a",
+  "description": "A focus timer app to help you study better!",
+  "lang": "en",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/static/StudyBuddyImg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
