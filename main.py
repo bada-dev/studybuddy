@@ -46,13 +46,10 @@ MAX_REBORNS = 500
 VALID_COSMETICS = [None, 'tophat', 'wizard', 'pirate']
 VALID_BACKGROUNDS = ['default', 'ocean', 'sunset', 'lavender', 'mint', 'rose', 'midnight', 'forest']
 
-@app.route('/manifest.json')
-def manifest():
-    return app.send_static_file('manifest.json')
-
 @app.route('/sw.js')
 def service_worker():
-    return app.send_static_file('sw.js')
+    from flask import send_from_directory
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
 
 @app.route('/')
 def home():
