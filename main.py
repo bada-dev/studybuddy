@@ -39,7 +39,7 @@ def init_db():
 init_db()
 
 FEEDBACK_COOLDOWN = 48 * 60 * 60
-SYNC_COOLDOWN = 30
+SYNC_COOLDOWN = 5
 MAX_MINUTES = 50000
 MAX_STREAK = 5000
 MAX_REBORNS = 500
@@ -186,6 +186,19 @@ def set_feedback_cooldown():
     conn = get_db()
     conn.execute('INSERT OR REPLACE INTO feedback_cooldowns (ip, last_submitted) VALUES (?, ?)',
                  (ip, int(time.time())))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/delete-user', methods=['POST'])
+def delete_user():
+    data = request.get_json()
+    username = data.get('username')
+    if not username:
+        return jsonify({'success': False})
+    conn = get_db()
+    conn.execute('DELETE FROM users WHERE username = ?', (username,))
+    conn.execute('DELETE FROM sync_ratelimit WHERE username = ?', (username,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
