@@ -2375,9 +2375,9 @@ button:disabled {
 
       <div class="stats-content">
       <div class="stats-header">Statistics</div>
-	  <button class="gcal-btn" id="leaderboardBtn" style="margin: 0 0 10px 0;">🏆 Leaderboard</button>
-      <button class="gcal-btn" id="achievementsBtn" style="margin: 0 0 10px 0;">🏆 Achievements</button>
-      <button class="gcal-btn" id="streakDisplay" style="margin: 0 0 20px 0; cursor: pointer;">🔥 Streak: <span id="streakCount">0</span> days <span id="freezeIndicator"></span></button>
+	  <<button class="gcal-btn" id="leaderboardBtn" style="margin: 0 0 10px 0; position:relative; z-index:10;">🏆 Leaderboard</button>
+      <button class="gcal-btn" id="achievementsBtn" style="margin: 0 0 10px 0; position:relative; z-index:10;">🏆 Achievements</button>
+      <button class="gcal-btn" id="streakDisplay" style="margin: 0 0 20px 0; cursor: pointer; position:relative; z-index:10;">
         
         <div class="stats-grid">
           <div class="stat-card">
@@ -5146,6 +5146,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     state.unlockedAchievements = [];
     state.streak = 0;
     state.lastStreakDate = null;
+    if (state.username) {
+      fetch('/delete-user', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username: state.username})});
+      state.username = null;
+    }
     state.streakFreezeActive = false;
     state.hasBook = false;
     state.reborns = 0;
@@ -6084,17 +6088,7 @@ function showUserProfile(user, rank) {
 
   document.getElementById('userProfileContent').innerHTML = `
     <div style="margin:-26px -26px 16px;border-radius:16px 16px 0 0;padding:24px 16px;background:${bg.gradient};background-size:200% 200%;display:flex;flex-direction:column;align-items:center;gap:10px;">
-      <div style="position:relative;width:${width}px;height:${Math.round(width*1.14)}px;animation:breathe 3s ease-in-out infinite alternate;">
-        <div class="character-shadow" style="width:${Math.min(width*0.7,180)}px;"></div>
-        <div class="character-body" style="filter:saturate(${100-grayAmt}%) brightness(${100-grayAmt*0.3}%);">
-          <div class="character-eyes">
-            <div class="eye"></div>
-            <div class="eye"></div>
-          </div>
-          <div class="character-mouth" style="${happiness<=20?'border-bottom:none;border-top:4px solid #2D3142;border-radius:40px 40px 0 0;bottom:45px;left:24px;width:32px;height:22px;':happiness<=50?'border-bottom:none;border-top:3px solid #2D3142;border-radius:35px 35px 0 0;bottom:48px;left:26px;width:30px;':''}"></div>
-        </div>
-        ${cosmeticHTML}
-      </div>
+	<div style="font-size:48px;margin:8px 0;">${cosmetic ? cosmetic.icon : '🐾'}</div>
       <div style="font-size:20px;font-weight:800;color:white;text-shadow:0 2px 8px rgba(0,0,0,0.4);">${user.username}${isYou ? ' 👤' : ''}</div>
       <div style="font-size:22px;">${rankDisplay}</div>
     </div>
@@ -6255,7 +6249,7 @@ document.getElementById('leaderboardBtn').addEventListener('click', async () => 
         const col = document.createElement('div');
         col.className = 'lb-podium-col';
         col.innerHTML = `
-          $${rank === 1 ? '<div style="font-size:22px;animation:crownBounce 1.2s ease-in-out infinite;">👑</div>' : '<div style="height:30px;"></div>'}
+          ${rank === 1 ? '<div style="font-size:22px;animation:crownBounce 1.2s ease-in-out infinite;">👑</div>' : '<div style="height:30px;"></div>'}
           <div style="font-size:11px;font-weight:700;text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user.username}${isYou ? ' 👤' : ''}</div>
           <div style="font-size:10px;color:#6B7080;">${user.total_minutes}m</div>
           <div class="lb-podium-base" style="height:${height};background:${bg};animation:${glow};">${medal}</div>
