@@ -2375,9 +2375,9 @@ button:disabled {
 
       <div class="stats-content">
       <div class="stats-header">Statistics</div>
-	  <<button class="gcal-btn" id="leaderboardBtn" style="margin: 0 0 10px 0; position:relative; z-index:10;">🏆 Leaderboard</button>
+	  <button class="gcal-btn" id="leaderboardBtn" style="margin: 0 0 10px 0; position:relative; z-index:10;">🏆 Leaderboard</button>
       <button class="gcal-btn" id="achievementsBtn" style="margin: 0 0 10px 0; position:relative; z-index:10;">🏆 Achievements</button>
-      <button class="gcal-btn" id="streakDisplay" style="margin: 0 0 20px 0; cursor: pointer; position:relative; z-index:10;">
+      <button class="gcal-btn" id="streakDisplay" style="margin: 0 0 20px 0; cursor: pointer; position:relative; z-index:10;">🔥 <span id="streakCount">0</span> Day Streak <span id="freezeIndicator"></span></button>
         
         <div class="stats-grid">
           <div class="stat-card">
@@ -2878,6 +2878,7 @@ button:disabled {
           <div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#5B4A3A;">➡️ Move Right px</div>
           <input type="number" class="modal-input" id="charOffsetXInput" min="-200" max="200" value="0" style="margin:0;padding:10px;">
       	</div>
+       </div>
       <button class="modal-btn primary" id="saveResourcesBtn" style="width:100%;margin-bottom:8px;">💾 Save Resources</button>
       <div style="display:flex;gap:6px;">
         <button class="modal-btn secondary" id="maxHappinessBtn" style="flex:1;font-size:11px;padding:9px;">❤️ Max Happy</button>
